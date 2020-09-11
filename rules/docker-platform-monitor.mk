@@ -10,11 +10,16 @@ $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(LIBSENSORS) $(LM_SENSORS) $(FANCONTROL) 
 ifeq ($(CONFIGURED_PLATFORM),barefoot)
 $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(PYTHON_THRIFT)
 endif
-$(DOCKER_PLATFORM_MONITOR)_PYTHON_DEBS += $(SONIC_LEDD) $(SONIC_XCVRD) $(SONIC_PSUD) $(SONIC_SYSEEPROMD) $(SONIC_THERMALCTLD)
 $(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY2)
 $(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SWSSSDK_PY2)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_PY_COMMON_PY2)
 $(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_PLATFORM_API_PY2)
-$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_DAEMON_BASE_PY2)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_LEDD)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_PCIED)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_PSUD)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_SYSEEPROMD)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_THERMALCTLD)
+$(DOCKER_PLATFORM_MONITOR)_PYTHON_WHEELS += $(SONIC_XCVRD)
 
 $(DOCKER_PLATFORM_MONITOR)_DBG_DEPENDS = $($(DOCKER_CONFIG_ENGINE_BUSTER)_DBG_DEPENDS)
 $(DOCKER_PLATFORM_MONITOR)_DBG_DEPENDS += $(LIBSWSSCOMMON_DBG) $(LIBSENSORS_DBG)
@@ -36,7 +41,9 @@ $(DOCKER_PLATFORM_MONITOR)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 
 # Mount Arista python library on Aboot images to be used by plugins
 $(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python2.7/dist-packages/arista:/usr/lib/python2.7/dist-packages/arista:ro
-$(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python2.7/dist-packages/arista/utils/sonic_platform:/usr/lib/python2.7/dist-packages/sonic_platform:ro
+$(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python3/dist-packages/arista:/usr/lib/python3/dist-packages/arista:ro
+$(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python2.7/dist-packages/sonic_platform:/usr/lib/python2.7/dist-packages/sonic_platform:ro
+$(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python3/dist-packages/sonic_platform:/usr/lib/python3/dist-packages/sonic_platform:ro
 
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += cmd_wrapper:/usr/bin/sensors
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += cmd_wrapper:/usr/sbin/smartctl

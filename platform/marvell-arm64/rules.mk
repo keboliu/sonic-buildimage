@@ -7,7 +7,7 @@ include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-ptf-mrvl.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/linux-kernel-arm64.mk
-ENABLE_SYSTEM_TELEMETRY = ""
+INCLUDE_SYSTEM_TELEMETRY = ""
 
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
@@ -17,6 +17,8 @@ SONIC_ALL += $(SONIC_ONE_IMAGE) \
 
 # Inject mrvl sai into syncd
 $(SYNCD)_DEPENDS += $(MRVL_SAI)
+$(SYNCD)_UNINSTALLS += $(MRVL_DEV)
+
 ifeq ($(ENABLE_SYNCD_RPC),y)
 $(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)
 endif

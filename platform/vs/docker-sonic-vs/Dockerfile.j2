@@ -13,7 +13,6 @@ RUN echo "deb http://packages.microsoft.com/repos/sonic-dev/ jessie main" >> /et
 RUN apt-get update
 
 RUN apt-get install -y net-tools \
-                       redis-server=5:6.0.5-1~bpo10+1 \
                        arping \
                        ndisc6 \
                        ethtool \
@@ -46,9 +45,17 @@ RUN apt-get install -y net-tools \
                        python-scapy \
                        conntrack \
                        iptables \
-                       python3-pip
+                       python3-pip \
+                       jq
+
+# install redis-server
+RUN curl -o redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
+RUN curl -o redis-server_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-server_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=2Ketg7BmkZEaTxR%2FgvAFVmhjn7ywdmkc7l2T2rsL57o%3D&se=2030-09-06T19%3A45%3A20Z&sp=r"
+RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f
+RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb
 
 RUN pip install setuptools
+RUN pip3 install setuptools
 RUN pip install py2_ipaddress
 RUN pip install six
 RUN pip install pyroute2==0.5.3 netifaces==0.10.7
@@ -60,6 +67,7 @@ RUN pip install crontab
 # Install dependencies for Dynamic Port Breakout
 RUN pip install xmltodict==0.12.0
 RUN pip install jsondiff==1.2.0
+RUN pip install ijson==2.6.1
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -119,13 +127,19 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                                              
             ' /etc/redis/redis.conf
 
 COPY ["50-default.conf", "/etc/rsyslog.d/"]
-COPY ["start.sh", "orchagent.sh", "/usr/bin/"]
+COPY ["start.sh", "orchagent.sh", "files/remove_chassisdb_config", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin/"]
 COPY ["files/buffers_config.j2", "files/qos_config.j2", "/usr/share/sonic/templates/"]
 COPY ["files/sonic_version.yml", "/etc/sonic/"]
 COPY ["database_config.json", "/etc/default/sonic-db/"]
+COPY ["hostname.j2", "/usr/share/sonic/templates/"]
+COPY ["default_chassis_cfg.json", "/etc/default/sonic-db/"]
+COPY ["chassis_db.py", "/usr/bin/"]
+
+COPY ["platform.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/"]
+COPY ["hwsku.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/Force10-S6000/"]
 
 # Workaround the tcpdump issue
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
@@ -139,5 +153,9 @@ RUN rm /etc/frr/frr.conf
 
 # Create /var/warmboot/teamd folder for teammgrd
 RUN mkdir -p /var/warmboot/teamd
+
+# Set PLATFORM and HWSKU environment variables
+ENV PLATFORM=x86_64-kvm_x86_64-r0
+ENV HWSKU=Force10-S6000
 
 ENTRYPOINT ["/usr/bin/supervisord"]
