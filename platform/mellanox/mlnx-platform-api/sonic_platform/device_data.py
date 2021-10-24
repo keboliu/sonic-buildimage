@@ -271,5 +271,26 @@ DEVICE_DATA = {
             'hot_swappable': True,
             'led_num': 1
         }
+    },
+    'x86_64-nvidia_sn2201-r0': {
+        'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:30":13, "31:40":14 , "41:120":15},
+                "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
+            }
+        },
+        'fans': {
+            'drawer_num': 0,
+            'drawer_type': 'real',
+            'fan_num_per_drawer': 0,
+            'support_fan_direction': False,
+            'hot_swappable': False
+        },
+        'psus': {
+            'psu_num': 2,
+            'fan_num_per_psu': 1,
+            'hot_swappable': True,
+            'led_num': 1
+        }
     }
 }

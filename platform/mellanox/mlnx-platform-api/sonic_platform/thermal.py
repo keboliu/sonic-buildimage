@@ -130,7 +130,7 @@ platform_dict_thermal = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700-r0':
                          'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 4,
                          'x86_64-mlnx_msn3420-r0': 9, 'x86_64-mlnx_msn3700-r0': 5, 'x86_64-mlnx_msn3700c-r0': 6,
                          'x86_64-mlnx_msn3800-r0': 7, 'x86_64-mlnx_msn4600-r0': 12, 'x86_64-mlnx_msn4600c-r0': 9,
-                         'x86_64-mlnx_msn4700-r0': 8, 'x86_64-mlnx_msn4410-r0': 8}
+                         'x86_64-mlnx_msn4700-r0': 8, 'x86_64-mlnx_msn4410-r0': 8, 'x86_64-nvidia_sn2201-r0': 13}
 thermal_profile_list = [
     # 0 2700
     {
@@ -332,6 +332,21 @@ thermal_profile_list = [
                 THERMAL_DEV_COMEX_AMBIENT,
                 THERMAL_DEV_PORT_AMBIENT,
                 THERMAL_DEV_FAN_AMBIENT
+            ]
+        )
+    },
+    # 13 2201
+    {
+        THERMAL_DEV_CATEGORY_CPU_CORE:(0, 2),
+        THERMAL_DEV_CATEGORY_MODULE:(49, 4),
+        THERMAL_DEV_CATEGORY_PSU:(1, 2),
+        THERMAL_DEV_CATEGORY_CPU_PACK:(0,1),
+        THERMAL_DEV_CATEGORY_GEARBOX:(0,0),
+        THERMAL_DEV_CATEGORY_AMBIENT:(0,
+            [
+                THERMAL_DEV_ASIC_AMBIENT,
+                THERMAL_DEV_PORT_AMBIENT,
+                THERMAL_DEV_FAN_AMBIENT,
             ]
         )
     }
