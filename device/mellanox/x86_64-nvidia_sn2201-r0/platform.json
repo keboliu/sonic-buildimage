@@ -448,8 +448,7 @@
             "lanes": "192,193,194,195",
             "breakout_modes": {
                 "1x100G[50G,40G,25G,10G]": ["etp49"],
-                "2x50G[25G,10G]": ["etp49a", "etp49b"],
-                "4x25G[10G]": ["etp49a", "etp49b", "etp49c", "etp49d"]
+                "2x50G[25G,10G]": ["etp49a", "etp49b"]
             }
         },
         "Ethernet52": {
@@ -457,8 +456,7 @@
             "lanes": "196,197,198,199",
             "breakout_modes": {
                 "1x100G[50G,40G,25G,10G]": ["etp50"],
-                "2x50G[25G,10G]": ["etp50a", "etp50b"],
-                "4x25G[10G]": ["etp50a", "etp50b", "etp50c", "etp50d"]
+                "2x50G[25G,10G]": ["etp50a", "etp50b"]
             }
         },
         "Ethernet56": {
@@ -466,8 +464,7 @@
             "lanes": "200,201,202,203",
             "breakout_modes": {
                 "1x100G[50G,40G,25G,10G]": ["etp51"],
-                "2x50G[25G,10G]": ["etp51a", "etp51b"],
-                "4x25G[10G]": ["etp51a", "etp51b", "etp51c", "etp51d"]
+                "2x50G[25G,10G]": ["etp51a", "etp51b"]
             }
         },
         "Ethernet60": {
@@ -475,8 +472,7 @@
             "lanes": "204,205,206,207",
             "breakout_modes": {
                 "1x100G[50G,40G,25G,10G]": ["etp52"],
-                "2x50G[25G,10G]": ["etp52a", "etp52b"],
-                "4x25G[10G]": ["etp52a", "etp52b", "etp52c", "etp52d"]
+                "2x50G[25G,10G]": ["etp52a", "etp52b"]
             }
         }
     }
