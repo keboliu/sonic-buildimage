@@ -259,6 +259,7 @@ SFP_TYPE = "SFP"
 QSFP_TYPE = "QSFP"
 OSFP_TYPE = "OSFP"
 QSFP_DD_TYPE = "QSFP_DD"
+RJ45_TYPE = "RJ45"
 
 #variables for sdk
 REGISTER_NUM = 1
@@ -365,8 +366,9 @@ class SFP(SfpBase):
         self.sdk_index = sfp_index
 
         # initialize SFP thermal list
-        from .thermal import initialize_sfp_thermals
-        initialize_sfp_thermals(platform, self._thermal_list, self.index)
+        if self.sfp_type != RJ45_TYPE:
+            from .thermal import initialize_sfp_thermals
+            initialize_sfp_thermals(platform, self._thermal_list, self.index)
 
     @property
     def sdk_handle(self):
@@ -388,6 +390,9 @@ class SFP(SfpBase):
         Returns:
             bool: True if device is present, False if not
         """
+        if self.sfp_type == RJ45_TYPE:
+            return True
+
         presence = False
         ethtool_cmd = "ethtool -m sfp{} hex on offset 0 length 1 2>/dev/null".format(self.index)
         try:
@@ -430,7 +435,10 @@ class SFP(SfpBase):
 
     def _detect_sfp_type(self, sfp_type):
         eeprom_raw = []
-        eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
+        if sfp_type == RJ45_TYPE:
+            eeprom_raw = None
+        else:
+            eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
         if eeprom_raw:
             if eeprom_raw[0] in SFP_TYPE_CODE_LIST:
                 self.sfp_type = SFP_TYPE
@@ -451,7 +459,7 @@ class SFP(SfpBase):
 
 
     def _dom_capability_detect(self):
-        if not self.get_presence():
+        if self.sfp_type == RJ45_TYPE or not self.get_presence():
             self.dom_supported = False
             self.dom_temp_supported = False
             self.dom_volt_supported = False
@@ -632,6 +640,25 @@ class SFP(SfpBase):
         # ToDo: OSFP tranceiver info parsing not fully supported.
         # in inf8628.py lack of some memory map definition
         # will be implemented when the inf8628 memory map ready
+        if self.sfp_type == RJ45_TYPE:
+            transceiver_info_dict['type'] = self.sfp_type
+            transceiver_info_dict['manufacturer'] = 'N/A'
+            transceiver_info_dict['model'] = 'N/A'
+            transceiver_info_dict['hardware_rev'] = 'N/A'
+            transceiver_info_dict['serial'] = 'N/A'
+            transceiver_info_dict['vendor_oui'] = 'N/A'
+            transceiver_info_dict['vendor_date'] = 'N/A'
+            transceiver_info_dict['connector'] = 'N/A'
+            transceiver_info_dict['encoding'] = 'N/A'
+            transceiver_info_dict['ext_identifier'] = 'N/A'
+            transceiver_info_dict['ext_rateselect_compliance'] = 'N/A'
+            transceiver_info_dict['cable_type'] = 'N/A'
+            transceiver_info_dict['cable_length'] = 'N/A'
+            transceiver_info_dict['specification_compliance'] = 'N/A'
+            transceiver_info_dict['nominal_bit_rate'] = 'N/A'
+            transceiver_info_dict['application_advertisement'] = 'N/A'
+            return transceiver_info_dict
+
         if self.sfp_type == OSFP_TYPE:
             offset = 0
             vendor_rev_width = XCVR_HW_REV_WIDTH_OSFP
@@ -952,7 +979,7 @@ class SFP(SfpBase):
                              ]
         transceiver_dom_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
 
-        if self.sfp_type == OSFP_TYPE:
+        if self.sfp_type == OSFP_TYPE or self.sfp_type == RJ45_TYPE:
             pass
 
         elif self.sfp_type == QSFP_TYPE:
@@ -1151,7 +1178,7 @@ class SFP(SfpBase):
                              ]
         transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
 
-        if self.sfp_type == OSFP_TYPE:
+        if self.sfp_type == OSFP_TYPE or self.sfp_type == RJ45_TYPE:
             pass
 
         elif self.sfp_type == QSFP_TYPE:

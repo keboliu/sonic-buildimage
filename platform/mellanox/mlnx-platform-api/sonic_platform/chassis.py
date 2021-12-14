@@ -13,9 +13,11 @@ try:
     from sonic_py_common.logger import Logger
     from os import listdir
     from os.path import isfile, join
+    from .utils import load_json_file, extract_RJ45_ports_index
     import sys
     import io
     import re
+    import os
     import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -81,6 +83,11 @@ class Chassis(ChassisBase):
 
         # Initialize Platform name
         self.platform_name = device_info.get_platform()
+        try:
+            if os.environ["PLATFORM_API_UNIT_TESTING"] == "1":
+                self.RJ45_port_list = None
+        except KeyError:
+            self.RJ45_port_list = extract_RJ45_ports_index()
 
         # Initialize DMI data
         self.dmi_data = None
@@ -162,7 +169,9 @@ class Chassis(ChassisBase):
 
     def initialize_single_sfp(self, index):
         if not self._sfp_list[index]:
-            if index >= self.QSFP_PORT_START and index < self.PORTS_IN_BLOCK:
+            if self.RJ45_port_list and  index in self.RJ45_port_list:
+                sfp_module = self.sfp_module(index, 'RJ45', self.get_sdk_handle, self.platform_name)
+            elif index >= self.QSFP_PORT_START and index < self.PORTS_IN_BLOCK:
                 sfp_module = self.sfp_module(index, 'QSFP', self.get_sdk_handle, self.platform_name)
             else:
                 sfp_module = self.sfp_module(index, 'SFP', self.get_sdk_handle, self.platform_name)
