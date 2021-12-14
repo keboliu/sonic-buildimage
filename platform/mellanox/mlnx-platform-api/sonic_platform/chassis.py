@@ -27,7 +27,7 @@ try:
     from sonic_py_common.logger import Logger
     import os
     from functools import reduce
-
+    from .utils import load_json_file, extract_RJ45_ports_index
     from . import utils
     from .device_data import DeviceDataManager
     from .sfp import SFP, deinitialize_sdk_handle
@@ -35,6 +35,8 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 MAX_SELECT_DELAY = 3600
+
+RJ45_TYPE = "RJ45"
 
 DMI_FILE = '/sys/firmware/dmi/entries/2-0/raw'
 DMI_HEADER_LEN = 15
@@ -107,6 +109,14 @@ class Chassis(ChassisBase):
         self.sfp_initialized_count = 0
         self.sfp_event = None
         self.reboot_cause_initialized = False
+
+        # Build the RJ45 port list from platform.json and hwsku.json
+        try:
+            if os.environ["PLATFORM_API_UNIT_TESTING"] == "1":
+                self.RJ45_port_list = None
+        except KeyError:
+            self.RJ45_port_list = extract_RJ45_ports_index()
+
         logger.log_info("Chassis loaded successfully")
 
     def __del__(self):
@@ -241,7 +251,10 @@ class Chassis(ChassisBase):
             
             if not self._sfp_list[index]:
                 from .sfp import SFP
-                self._sfp_list[index] = SFP(index)
+                if self.RJ45_port_list and index in self.RJ45_port_list:
+                    self._sfp_list[index] = SFP(index, RJ45_TYPE)
+                else:
+                    self._sfp_list[index] = SFP(index)
                 self.sfp_initialized_count += 1
 
     def initialize_sfp(self):
@@ -249,14 +262,20 @@ class Chassis(ChassisBase):
             from .sfp import SFP
             sfp_count = self.get_num_sfps()
             for index in range(sfp_count):
-                sfp_module = SFP(index)
+                if self.RJ45_port_list and index in self.RJ45_port_list:
+                    sfp_module = SFP(index, RJ45_TYPE)
+                else:
+                    sfp_module = SFP(index)
                 self._sfp_list.append(sfp_module)
             self.sfp_initialized_count = sfp_count
         elif self.sfp_initialized_count != len(self._sfp_list):
             from .sfp import SFP
             for index in range(len(self._sfp_list)):
                 if self._sfp_list[index] is None:
-                    self._sfp_list[index] = SFP(index)
+                    if self.RJ45_port_list and index in self.RJ45_port_list:
+                        self._sfp_list[index] = SFP(index, RJ45_TYPE)
+                    else:
+                        self._sfp_list[index] = SFP(index)
             self.sfp_initialized_count = len(self._sfp_list)
 
     def get_num_sfps(self):
