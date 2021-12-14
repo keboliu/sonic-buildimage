@@ -276,6 +276,7 @@ SFP_TYPE = "SFP"
 QSFP_TYPE = "QSFP"
 OSFP_TYPE = "OSFP"
 QSFP_DD_TYPE = "QSFP_DD"
+RJ45_TYPE = "RJ45"
 
 #variables for sdk
 REGISTER_NUM = 1
@@ -386,15 +387,17 @@ class SFP(SfpBase):
     SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
     SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
 
-    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0, lc_name=None):
+    def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
         super(SFP, self).__init__()
         
+        self._sfp_type = sfp_type
         if slot_id == 0: # For non-modular chassis
             self.index = sfp_index + 1
             self.sdk_index = sfp_index
 
-            from .thermal import initialize_sfp_thermal
-            self._thermal_list = initialize_sfp_thermal(sfp_index)
+            if self._sfp_type != RJ45_TYPE:
+                from .thermal import initialize_sfp_thermal
+                self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
             # (slot_id % MAX_LC_CONUNT - 1) * MAX_PORT_COUNT + (sfp_index + 1) * (MAX_PORT_COUNT / LC_PORT_COUNT)
             max_linecard_count = DeviceDataManager.get_linecard_count()
@@ -402,11 +405,11 @@ class SFP(SfpBase):
             self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count) + 1
             self.sdk_index = sfp_index
 
-            from .thermal import initialize_linecard_sfp_thermal
-            self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
+            if self._sfp_type != RJ45_TYPE:
+                from .thermal import initialize_linecard_sfp_thermal
+                self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
 
         self.slot_id = slot_id
-        self._sfp_type = None
         self._sfp_capability = None
         
     @property
@@ -627,7 +630,8 @@ class SFP(SfpBase):
         Re-initialize this SFP object when a new SFP inserted
         :return: 
         """
-        self._sfp_type = None
+        if self.sfp_type != RJ45_TYPE:
+            self.sfp_type = None
         self._sfp_capability = None
 
     def get_presence(self):
@@ -637,6 +641,9 @@ class SFP(SfpBase):
         Returns:
             bool: True if device is present, False if not
         """
+        if self.sfp_type == RJ45_TYPE:
+            return True
+
         presence = False
         ethtool_cmd = "ethtool -m sfp{} hex on offset 0 length 1 2>/dev/null".format(self.index)
         try:
@@ -907,6 +914,25 @@ class SFP(SfpBase):
             transceiver_info_dict['nominal_bit_rate'] = "Not supported for CMIS cables"
             transceiver_info_dict['application_advertisement'] = host_media_list
 
+        elif self.sfp_type == RJ45_TYPE:
+            transceiver_info_dict['type'] = self.sfp_type
+            transceiver_info_dict['manufacturer'] = 'N/A'
+            transceiver_info_dict['model'] = 'N/A'
+            transceiver_info_dict['vendor_rev'] = 'N/A'
+            transceiver_info_dict['serial'] = 'N/A'
+            transceiver_info_dict['vendor_oui'] = 'N/A'
+            transceiver_info_dict['vendor_date'] = 'N/A'
+            transceiver_info_dict['connector'] = 'N/A'
+            transceiver_info_dict['encoding'] = 'N/A'
+            transceiver_info_dict['ext_identifier'] = 'N/A'
+            transceiver_info_dict['ext_rateselect_compliance'] = 'N/A'
+            transceiver_info_dict['cable_type'] = 'N/A'
+            transceiver_info_dict['cable_length'] = 'N/A'
+            transceiver_info_dict['specification_compliance'] = 'N/A'
+            transceiver_info_dict['nominal_bit_rate'] = 'N/A'
+            transceiver_info_dict['application_advertisement'] = 'N/A'
+            return transceiver_info_dict
+
         else:
             offset = 0
             vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
@@ -1043,7 +1069,7 @@ class SFP(SfpBase):
                              ]
         transceiver_dom_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
 
-        if self.sfp_type == OSFP_TYPE:
+        if self.sfp_type == OSFP_TYPE or self.sfp_type == RJ45_TYPE:
             pass
 
         elif self.sfp_type == QSFP_TYPE:
@@ -1242,7 +1268,7 @@ class SFP(SfpBase):
                              ]
         transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
 
-        if self.sfp_type == OSFP_TYPE:
+        if self.sfp_type == OSFP_TYPE or self.sfp_type == RJ45_TYPE:
             pass
 
         elif self.sfp_type == QSFP_TYPE:
