@@ -80,6 +80,8 @@ QSFP_DD_TYPE_CODE_LIST = [
     '18' # QSFP-DD Double Density 8X Pluggable Transceiver
 ]
 
+RJ45_TYPE = "RJ45"
+
 #variables for sdk
 REGISTER_NUM = 1
 DEVICE_ID = 1
@@ -174,15 +176,17 @@ class SFP(SfpOptoeBase):
     SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
     SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
 
-    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0, lc_name=None):
+    def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
         super(SFP, self).__init__()
-
+        
+        self._sfp_type = sfp_type
         if slot_id == 0: # For non-modular chassis
             self.index = sfp_index + 1
             self.sdk_index = sfp_index
 
-            from .thermal import initialize_sfp_thermal
-            self._thermal_list = initialize_sfp_thermal(sfp_index)
+            if self._sfp_type != RJ45_TYPE:
+                from .thermal import initialize_sfp_thermal
+                self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
             # (slot_id % MAX_LC_CONUNT - 1) * MAX_PORT_COUNT + (sfp_index + 1) * (MAX_PORT_COUNT / LC_PORT_COUNT)
             max_linecard_count = DeviceDataManager.get_linecard_count()
@@ -190,11 +194,13 @@ class SFP(SfpOptoeBase):
             self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count) + 1
             self.sdk_index = sfp_index
 
-            from .thermal import initialize_linecard_sfp_thermal
-            self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
+            if self._sfp_type != RJ45_TYPE:
+                from .thermal import initialize_linecard_sfp_thermal
+                self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
 
         self.slot_id = slot_id
-
+        self._sfp_capability = None
+        
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -208,7 +214,9 @@ class SFP(SfpOptoeBase):
         Re-initialize this SFP object when a new SFP inserted
         :return:
         """
-        self.refresh_xcvr_api()
+        if self.sfp_type != RJ45_TYPE:
+            self.refresh_xcvr_api()
+        self._sfp_capability = None
 
     def get_presence(self):
         """
