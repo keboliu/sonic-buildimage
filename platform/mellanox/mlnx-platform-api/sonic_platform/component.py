@@ -29,6 +29,7 @@ try:
     import glob
     import tempfile
     import subprocess
+    from sonic_py_common import device_info
     if sys.version_info[0] > 2:
         import configparser
     else:
@@ -136,7 +137,13 @@ class ONIEUpdater(object):
 
     ONIE_IMAGE_INFO_COMMAND = '/bin/bash {} -q -i'
 
+    PLATFORM_ALWAYS_SUPPORT_UPGRADE = ['x86_64-nvidia_sn2201-r0']
+
     BIOS_UPDATE_FILE_EXT = '.rom'
+    
+
+    def __init__(self):
+        self.platform = device_info.get_platform()
 
     def __add_prefix(self, image_path):
         if self.BIOS_UPDATE_FILE_EXT not in image_path:
@@ -336,6 +343,9 @@ class ONIEUpdater(object):
             raise
 
     def is_non_onie_firmware_update_supported(self):
+        if self.platform in self.PLATFORM_ALWAYS_SUPPORT_UPGRADE:
+            return True
+
         current_version = self.get_onie_version()
         _, _, major1, minor1, release1, _ = self.parse_onie_version(current_version)
         version1 = int("{}{}{}".format(major1, minor1, release1))
