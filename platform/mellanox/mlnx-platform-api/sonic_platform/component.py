@@ -29,6 +29,7 @@ try:
     import glob
     import tempfile
     import subprocess
+    from sonic_py_common import device_info
     if sys.version_info[0] > 2:
         import configparser
     else:
@@ -129,6 +130,11 @@ class ONIEUpdater(object):
     ONIE_NO_PENDING_UPDATES_ATTR = 'No pending firmware updates present'
 
     ONIE_IMAGE_INFO_COMMAND = '/bin/bash {} -q -i'
+
+    PLATFORM_ALWAYS_SUPPORT_UPGRADE = ['x86_64-nvidia_sn2201-r0']
+
+    def __init__(self):
+        self.platform = device_info.get_platform()
 
     def __mount_onie_fs(self):
         fs_mountpoint = '/mnt/onie-fs'
@@ -328,6 +334,9 @@ class ONIEUpdater(object):
             raise
 
     def is_non_onie_firmware_update_supported(self):
+        if self.platform in self.PLATFORM_ALWAYS_SUPPORT_UPGRADE:
+            return True
+
         current_version = self.get_onie_version()
         _, _, major1, minor1, release1, _ = self.parse_onie_version(current_version)
         version1 = int("{}{}{}".format(major1, minor1, release1))
