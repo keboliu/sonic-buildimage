@@ -533,7 +533,9 @@ class Chassis(ChassisBase):
             from .component import ComponentONIE, ComponentSSD, ComponentBIOS, ComponentCPLD
             self._component_list.append(ComponentONIE())
             self._component_list.append(ComponentSSD())
-            self._component_list.append(ComponentBIOS())
+            # Upgrading BIOS is not supported on SN2201
+            if DeviceDataManager.get_platform_name() not in ['x86_64-nvidia_sn2201-r0']:
+                self._component_list.append(ComponentBIOS())
             self._component_list.extend(ComponentCPLD.get_component_list())
 
     def get_num_components(self):
