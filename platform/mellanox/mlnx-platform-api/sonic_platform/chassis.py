@@ -30,7 +30,7 @@ try:
     from .utils import load_json_file, extract_RJ45_ports_index
     from . import utils
     from .device_data import DeviceDataManager
-    from .sfp import SFP, deinitialize_sdk_handle
+    from .sfp import SFP, RJ45Port, deinitialize_sdk_handle
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -252,7 +252,7 @@ class Chassis(ChassisBase):
             if not self._sfp_list[index]:
                 from .sfp import SFP
                 if self.RJ45_port_list and index in self.RJ45_port_list:
-                    self._sfp_list[index] = SFP(index, RJ45_TYPE)
+                    self._sfp_list[index] = RJ45Port(index)
                 else:
                     self._sfp_list[index] = SFP(index)
                 self.sfp_initialized_count += 1
@@ -263,7 +263,7 @@ class Chassis(ChassisBase):
             sfp_count = self.get_num_sfps()
             for index in range(sfp_count):
                 if self.RJ45_port_list and index in self.RJ45_port_list:
-                    sfp_module = SFP(index, RJ45_TYPE)
+                    sfp_module = RJ45Port(index) #SFP(index, RJ45_TYPE)
                 else:
                     sfp_module = SFP(index)
                 self._sfp_list.append(sfp_module)
@@ -273,7 +273,7 @@ class Chassis(ChassisBase):
             for index in range(len(self._sfp_list)):
                 if self._sfp_list[index] is None:
                     if self.RJ45_port_list and index in self.RJ45_port_list:
-                        self._sfp_list[index] = SFP(index, RJ45_TYPE)
+                        self._sfp_list[index] = RJ45Port(index) # SFP(index, RJ45_TYPE)
                     else:
                         self._sfp_list[index] = SFP(index)
             self.sfp_initialized_count = len(self._sfp_list)
@@ -358,7 +358,33 @@ class Chassis(ChassisBase):
             status = self.sfp_event.check_sfp_status(port_dict, error_dict, timeout)
 
         if status:
-            self.reinit_sfps(port_dict)
+            if self.RJ45_port_list:
+                # Translate any plugin/plugout event into error dict
+                unknown_port = set()
+                unplug_port = set()
+                for index, event in port_dict.items():
+                    if index in self.RJ45_port_list:
+                        # Remove it from port event
+                        # check if it's unknown event
+                        if event == '0': # Remove event
+                            unplug_port.add(index)
+                        elif event != '1':
+                            unknown_port.add(index)
+                # This is to leverage TRANSCEIVER_STATUS table to represent 'Not present' and 'Unknown' state
+                # The event should satisfies:
+                # - Vendor specific error bit
+                # - Non-blocking bit
+                # Currently, the 2 MSBs are reserved for this since they are most unlikely to be used in the near future
+                for index in unknown_port:
+                    # Bit 31 for unknown
+                    port_dict[index] = '2147483648'
+                    error_dict[index] = 'Unknown'
+                for index in unplug_port:
+                    # Bit 30 for not present
+                    port_dict[index] = '1073741824'
+                    error_dict[index] = 'Not present'
+            if port_dict:
+                self.reinit_sfps(port_dict)
             result_dict = {'sfp':port_dict}
             if error_dict:
                 result_dict['sfp_error'] = error_dict
