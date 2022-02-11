@@ -631,7 +631,7 @@ class SFP(SfpBase):
         :return: 
         """
         if self.sfp_type != RJ45_TYPE:
-            self.sfp_type = None
+            self._sfp_type = None
         self._sfp_capability = None
 
     def get_presence(self):
