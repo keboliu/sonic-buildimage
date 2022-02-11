@@ -249,7 +249,6 @@ class SFP(SfpOptoeBase):
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
         return bytearray(eeprom_raw)
 
-
     @classmethod
     def mgmt_phy_mod_pwr_attr_get(cls, power_attr_type, sdk_handle, sdk_index, slot_id):
         sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
