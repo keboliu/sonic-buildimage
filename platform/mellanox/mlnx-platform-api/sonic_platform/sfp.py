@@ -228,6 +228,7 @@ class SFP(SfpOptoeBase):
 
         return eeprom_raw is not None
 
+
     # Read out any bytes from any offset
     def read_eeprom(self, offset, num_bytes):
         eeprom_raw = []
