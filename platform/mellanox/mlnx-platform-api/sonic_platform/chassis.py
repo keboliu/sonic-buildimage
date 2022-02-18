@@ -342,7 +342,7 @@ class Chassis(ChassisBase):
         # Initialize SFP event first
         if not self.sfp_event:
             from .sfp_event import sfp_event
-            self.sfp_event = sfp_event()
+            self.sfp_event = sfp_event(self.RJ45_port_list)
             self.sfp_event.initialize()
 
         wait_for_ever = (timeout == 0)
@@ -358,31 +358,6 @@ class Chassis(ChassisBase):
             status = self.sfp_event.check_sfp_status(port_dict, error_dict, timeout)
 
         if status:
-            if self.RJ45_port_list:
-                # Translate any plugin/plugout event into error dict
-                unknown_port = set()
-                unplug_port = set()
-                for index, event in port_dict.items():
-                    if index in self.RJ45_port_list:
-                        # Remove it from port event
-                        # check if it's unknown event
-                        if event == '0': # Remove event
-                            unplug_port.add(index)
-                        elif event != '1':
-                            unknown_port.add(index)
-                # This is to leverage TRANSCEIVER_STATUS table to represent 'Not present' and 'Unknown' state
-                # The event should satisfies:
-                # - Vendor specific error bit
-                # - Non-blocking bit
-                # Currently, the 2 MSBs are reserved for this since they are most unlikely to be used in the near future
-                for index in unknown_port:
-                    # Bit 31 for unknown
-                    port_dict[index] = '2147483648'
-                    error_dict[index] = 'Unknown'
-                for index in unplug_port:
-                    # Bit 30 for not present
-                    port_dict[index] = '1073741824'
-                    error_dict[index] = 'Not present'
             if port_dict:
                 self.reinit_sfps(port_dict)
             result_dict = {'sfp':port_dict}
