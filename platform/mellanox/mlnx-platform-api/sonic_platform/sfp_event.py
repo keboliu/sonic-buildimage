@@ -147,8 +147,7 @@ class sfp_event:
         self.user_channel_p = new_sx_user_channel_t_p()
 
         self.RJ45_port_list = rj45_port_list
-        if rj45_port_list:
-            self.absent_ports_before_init = []
+        self.absent_ports_before_init = []
 
     def initialize(self):
         swid_cnt_p = None
@@ -325,7 +324,16 @@ class sfp_event:
                     # 3. and then the sfp module is removed
                     # 4. sfp_event starts to try fetching the change event
                     # in this case found is increased so that True will be returned
-                    logger.log_info("unknown module state {}, maybe the port suffers two adjacent insertion/removal".format(module_state))
+                    # For RJ45 ports, we will report "unknown" event anyway since it's legal
+                    reported = 0
+                    if self.RJ45_port_list:
+                        for port in port_list:
+                            if port in self.RJ45_port_list:
+                                port_change[port+1] = sfp_state
+                                reported += 1
+
+                    if not reported:
+                        logger.log_info("unknown module state {}, maybe the port suffers two adjacent insertion/removal".format(module_state))
                     found += 1
                     continue
 
