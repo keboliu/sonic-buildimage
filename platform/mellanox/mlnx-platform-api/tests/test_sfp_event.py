@@ -63,8 +63,7 @@ class TestSfpEvent(object):
     @patch('select.select', MagicMock(return_value=([99], None, None)))
     def test_check_sfp_status_rj45(self):
         from sonic_platform.sfp_event import sfp_event
-        from sonic_platform.sfp_event import SDK_SFP_STATE_IN, SDK_SFP_STATE_OUT, SDK_SFP_STATE_ERR
-        from sonic_platform.sfp_event import SDK_ERRORS_TO_ERROR_BITS, SDK_ERRORS_TO_DESCRIPTION, SDK_SFP_BLOCKING_ERRORS
+        from sonic_platform.sfp_event import SDK_SFP_STATE_IN, SDK_SFP_STATE_OUT
         from sonic_platform.sfp_event import RJ45_UNPLUG_EVENT, RJ45_UNKNOWN_EVENT
 
         # Verify absent ports before initialization
