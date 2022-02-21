@@ -137,6 +137,10 @@ class ONIEUpdater(object):
 
     ONIE_IMAGE_INFO_COMMAND = '/bin/bash {} -q -i'
 
+    # Upgrading fireware from ONIE is not supported from the beginning on some platforms, like SN2700.
+    # There is a logic to check the ONIE version in order to know whether it is supported.
+    # If it is not supported, we will not proceed and print some error message.
+    # For SN2201, upgrading fireware from ONIE is supported from day one so we do not need to check it.
     PLATFORM_ALWAYS_SUPPORT_UPGRADE = ['x86_64-nvidia_sn2201-r0']
 
     BIOS_UPDATE_FILE_EXT = '.rom'

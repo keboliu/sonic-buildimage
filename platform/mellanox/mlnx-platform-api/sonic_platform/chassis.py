@@ -263,7 +263,7 @@ class Chassis(ChassisBase):
             sfp_count = self.get_num_sfps()
             for index in range(sfp_count):
                 if self.RJ45_port_list and index in self.RJ45_port_list:
-                    sfp_module = RJ45Port(index) #SFP(index, RJ45_TYPE)
+                    sfp_module = RJ45Port(index)
                 else:
                     sfp_module = SFP(index)
                 self._sfp_list.append(sfp_module)
@@ -273,7 +273,7 @@ class Chassis(ChassisBase):
             for index in range(len(self._sfp_list)):
                 if self._sfp_list[index] is None:
                     if self.RJ45_port_list and index in self.RJ45_port_list:
-                        self._sfp_list[index] = RJ45Port(index) # SFP(index, RJ45_TYPE)
+                        self._sfp_list[index] = RJ45Port(index)
                     else:
                         self._sfp_list[index] = SFP(index)
             self.sfp_initialized_count = len(self._sfp_list)
@@ -536,6 +536,7 @@ class Chassis(ChassisBase):
             self._component_list.append(ComponentSSD())
             # Upgrading BIOS is not supported on SN2201
             if DeviceDataManager.get_platform_name() not in ['x86_64-nvidia_sn2201-r0']:
+                logger.log_notice("Updating BIOS is not supported on SN2201")
                 self._component_list.append(ComponentBIOS())
             self._component_list.extend(ComponentCPLD.get_component_list())
 
