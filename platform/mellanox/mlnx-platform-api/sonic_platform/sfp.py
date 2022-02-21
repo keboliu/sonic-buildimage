@@ -396,6 +396,7 @@ class SFP(SfpBase):
             self.sdk_index = sfp_index
 
             if self._sfp_type != RJ45_TYPE:
+                # No thermal sensors for RJ45 ports so we do not need to initiallize them.
                 from .thermal import initialize_sfp_thermal
                 self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
@@ -2378,8 +2379,6 @@ class RJ45Port(SFP):
         super(RJ45Port, self).__init__(sfp_index, RJ45_TYPE)
         self._sfp_type = RJ45_TYPE
 
-    # Reuse sdk_handle
-
     @property
     def sfp_type(self):
         return self._sfp_type
@@ -2387,11 +2386,11 @@ class RJ45Port(SFP):
     def get_presence(self):
         """
         Retrieves the presence of the device
+        For RJ45 ports, it always return True
 
         Returns:
             bool: True if device is present, False if not
         """
-        # Reimplement it via using SDK API
         return True
 
     @property
@@ -2400,7 +2399,8 @@ class RJ45Port(SFP):
 
     def get_transceiver_info(self):
         """
-        Retrieves transceiver info of this SFP
+        Retrieves transceiver info of this port.
+        For RJ45, all fields are N/A
 
         Returns:
             A dict which contains following keys/values :
@@ -2444,102 +2444,6 @@ class RJ45Port(SFP):
         transceiver_info_dict['application_advertisement'] = 'N/A'
 
         return transceiver_info_dict
-
-    def get_transceiver_bulk_status(self):
-        """
-        Retrieves transceiver bulk status of this SFP
-
-        Returns:
-            A dict which contains following keys/values :
-        ========================================================================
-        keys                       |Value Format   |Information
-        ---------------------------|---------------|----------------------------
-        RX LOS                     |BOOLEAN        |RX lost-of-signal status,
-                                   |               |True if has RX los, False if not.
-        TX FAULT                   |BOOLEAN        |TX fault status,
-                                   |               |True if has TX fault, False if not.
-        Reset status               |BOOLEAN        |reset status,
-                                   |               |True if SFP in reset, False if not.
-        LP mode                    |BOOLEAN        |low power mode status,
-                                   |               |True in lp mode, False if not.
-        TX disable                 |BOOLEAN        |TX disable status,
-                                   |               |True TX disabled, False if not.
-        TX disabled channel        |HEX            |disabled TX channles in hex,
-                                   |               |bits 0 to 3 represent channel 0
-                                   |               |to channel 3.
-        Temperature                |INT            |module temperature in Celsius
-        Voltage                    |INT            |supply voltage in mV
-        TX bias                    |INT            |TX Bias Current in mA
-        RX power                   |INT            |received optical power in mW
-        TX power                   |INT            |TX output power in mW
-        ========================================================================
-        """
-        transceiver_dom_info_dict = {}
-        dom_info_dict_keys = ['temperature',    'voltage',
-                              'rx1power',       'rx2power',
-                              'rx3power',       'rx4power',
-                              'rx5power',       'rx6power',
-                              'rx7power',       'rx8power',
-                              'tx1bias',        'tx2bias',
-                              'tx3bias',        'tx4bias',
-                              'tx5bias',        'tx6bias',
-                              'tx7bias',        'tx8bias',
-                              'tx1power',       'tx2power',
-                              'tx3power',       'tx4power',
-                              'tx5power',       'tx6power',
-                              'tx7power',       'tx8power'
-                             ]
-        transceiver_dom_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
-
-        return transceiver_dom_info_dict
-
-    def get_transceiver_threshold_info(self):
-        """
-        Retrieves transceiver threshold info of this SFP
-
-        Returns:
-            A dict which contains following keys/values :
-        ========================================================================
-        keys                       |Value Format   |Information
-        ---------------------------|---------------|----------------------------
-        temphighalarm              |FLOAT          |High Alarm Threshold value of temperature in Celsius.
-        templowalarm               |FLOAT          |Low Alarm Threshold value of temperature in Celsius.
-        temphighwarning            |FLOAT          |High Warning Threshold value of temperature in Celsius.
-        templowwarning             |FLOAT          |Low Warning Threshold value of temperature in Celsius.
-        vcchighalarm               |FLOAT          |High Alarm Threshold value of supply voltage in mV.
-        vcclowalarm                |FLOAT          |Low Alarm Threshold value of supply voltage in mV.
-        vcchighwarning             |FLOAT          |High Warning Threshold value of supply voltage in mV.
-        vcclowwarning              |FLOAT          |Low Warning Threshold value of supply voltage in mV.
-        rxpowerhighalarm           |FLOAT          |High Alarm Threshold value of received power in dBm.
-        rxpowerlowalarm            |FLOAT          |Low Alarm Threshold value of received power in dBm.
-        rxpowerhighwarning         |FLOAT          |High Warning Threshold value of received power in dBm.
-        rxpowerlowwarning          |FLOAT          |Low Warning Threshold value of received power in dBm.
-        txpowerhighalarm           |FLOAT          |High Alarm Threshold value of transmit power in dBm.
-        txpowerlowalarm            |FLOAT          |Low Alarm Threshold value of transmit power in dBm.
-        txpowerhighwarning         |FLOAT          |High Warning Threshold value of transmit power in dBm.
-        txpowerlowwarning          |FLOAT          |Low Warning Threshold value of transmit power in dBm.
-        txbiashighalarm            |FLOAT          |High Alarm Threshold value of tx Bias Current in mA.
-        txbiaslowalarm             |FLOAT          |Low Alarm Threshold value of tx Bias Current in mA.
-        txbiashighwarning          |FLOAT          |High Warning Threshold value of tx Bias Current in mA.
-        txbiaslowwarning           |FLOAT          |Low Warning Threshold value of tx Bias Current in mA.
-        ========================================================================
-        """
-        transceiver_dom_threshold_info_dict = {}
-
-        dom_info_dict_keys = ['temphighalarm',    'temphighwarning',
-                              'templowalarm',     'templowwarning',
-                              'vcchighalarm',     'vcchighwarning',
-                              'vcclowalarm',      'vcclowwarning',
-                              'rxpowerhighalarm', 'rxpowerhighwarning',
-                              'rxpowerlowalarm',  'rxpowerlowwarning',
-                              'txpowerhighalarm', 'txpowerhighwarning',
-                              'txpowerlowalarm',  'txpowerlowwarning',
-                              'txbiashighalarm',  'txbiashighwarning',
-                              'txbiaslowalarm',   'txbiaslowwarning'
-                             ]
-        transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
-
-        return transceiver_dom_threshold_info_dict
 
     def get_reset_status(self):
         return False
