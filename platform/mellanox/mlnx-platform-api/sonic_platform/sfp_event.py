@@ -115,7 +115,16 @@ sfp_value_status_dict = {
     SDK_SFP_STATE_DIS: str(SFP.SFP_STATUS_BIT_REMOVED),
 }
 
-# RJ45 ports events definition
+"""
+RJ45 ports events definition
+For RJ45, get_present always returns True.
+In case an unplug / unknown event is reported for a port, error status is leveraged for representing them.
+The following events will be used.
+- Unknown: 2147483648 => 0x80000000
+- Unplug: 1073741824 => 0x40000000
+According to the error status design, the upper half (bits 16 ~ 31) are the events are encoded from bit 16 (0x0001000),
+using those numbers will avoid conflict as much as possible
+"""
 RJ45_UNPLUG_EVENT = '1073741824'
 RJ45_UNKNOWN_EVENT = '2147483648'
 
