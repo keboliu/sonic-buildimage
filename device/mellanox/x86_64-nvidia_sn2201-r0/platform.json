@@ -17,17 +17,39 @@
                 "name": "CPLD2"
             }
         ],
-        "fans": [{
-                "name": "fan1"
+        "fans": [],
+        "fan_drawers": [
+            {
+                "name": "drawer1",
+                "fans": [
+                    {
+                        "name": "fan1"
+                    }
+                ]
             },
             {
-                "name": "fan2"
+                "name": "drawer2",
+                "fans": [
+                    {
+                        "name": "fan2"
+                    }
+                ]
             },
             {
-                "name": "fan3"
+                "name": "drawer3",
+                "fans": [
+                    {
+                        "name": "fan3"
+                    }
+                ]
             },
             {
-                "name": "fan4"
+                "name": "drawer4",
+                "fans": [
+                    {
+                        "name": "fan4"
+                    }
+                ]
             }
         ],
         "psus": [
@@ -64,6 +86,12 @@
             },
             {
                 "name": "Ambient Fan Side Temp"
+            },
+            {
+                "name": "Ambient CPU Board Temp"
+            },
+            {
+                "name": "Ambient Switch Board Temp"
             },
             {
                 "name": "CPU Pack Temp"
