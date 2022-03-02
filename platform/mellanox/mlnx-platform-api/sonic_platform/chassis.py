@@ -532,8 +532,9 @@ class Chassis(ChassisBase):
             self._component_list.append(ComponentSSD())
             # Upgrading BIOS is not supported on SN2201
             if DeviceDataManager.get_platform_name() not in ['x86_64-nvidia_sn2201-r0']:
-                logger.log_notice("Updating BIOS is not supported on SN2201")
                 self._component_list.append(ComponentBIOS())
+            else:
+                logger.log_notice("Updating BIOS is not supported on SN2201")
             self._component_list.extend(ComponentCPLD.get_component_list())
 
     def get_num_components(self):
