@@ -111,11 +111,7 @@ class Chassis(ChassisBase):
         self.reboot_cause_initialized = False
 
         # Build the RJ45 port list from platform.json and hwsku.json
-        try:
-            if os.environ["PLATFORM_API_UNIT_TESTING"] == "1":
-                self.RJ45_port_list = None
-        except KeyError:
-            self.RJ45_port_list = extract_RJ45_ports_index()
+        self.RJ45_port_list = extract_RJ45_ports_index()
 
         logger.log_info("Chassis loaded successfully")
 
