@@ -594,7 +594,7 @@ function print_ssd_info() {
         LOG_MSG "Device Model\t : $SSD_DEVICE_MODEL"
         LOG_MSG "Serial Number\t : $SSD_SERIAL"
         LOG_MSG "User Capacity\t : $SSD_SIZE GB"
-        LOG_MSG "Firmware Version : $SSD_FW_VER"      
+        LOG_MSG "Firmware Version : $SSD_FW_VER"
     fi
 }
 

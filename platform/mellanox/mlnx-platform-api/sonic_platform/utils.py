@@ -16,7 +16,6 @@
 #
 import functools
 import subprocess
-import ast
 import json
 import sys
 import os
@@ -207,18 +206,20 @@ def default_return(return_value, log_func=logger.log_debug):
     return wrapper
 
 
-def load_json_file(filename):
+def load_json_file(filename, log_func=logger.log_error):
     # load 'platform.json' or 'hwsku.json' file
+    data = None
     try:
         with open(filename) as fp:
             try:
                 data = json.load(fp)
             except json.JSONDecodeError:
-                print("Json file does not exist")
-        data_dict = ast.literal_eval(json.dumps(data))
-        return data_dict
+                if log_func:
+                    log_func("failed to decode Json file.")
+        return data
     except Exception as e:
-        print("error occurred while parsing json: {}".format(sys.exc_info()[1]))
+        if log_func:
+            log_func("error occurred while parsing json file: {}".format(sys.exc_info()[1]))
         return None
 
 
