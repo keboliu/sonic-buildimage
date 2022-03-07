@@ -712,6 +712,37 @@ class ComponentBIOS(Component):
         self.__install_firmware(image_path)
 
 
+class ComponentBIOSSN2201(Component):
+    COMPONENT_NAME = 'BIOS'
+    COMPONENT_DESCRIPTION = 'BIOS - Basic Input/Output System'
+
+    BIOS_VERSION_COMMAND = 'dmidecode -t0'
+
+    def __init__(self):
+        super(ComponentBIOSSN2201, self).__init__()
+
+        self.name = self.COMPONENT_NAME
+        self.description = self.COMPONENT_DESCRIPTION
+
+    def get_firmware_version(self):
+        cmd = self.BIOS_VERSION_COMMAND
+
+        try:
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
+                                             universal_newlines=True).rstrip('\n')
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Failed to get {} version: {}".format(self.name, str(e)))
+
+        match = re.search('Version: (.*)', output)
+        if match:
+            version = match.group(1)
+        else:
+            version = 'Unknown version'
+
+        return version
+
+
 class ComponentCPLD(Component):
     COMPONENT_NAME = 'CPLD{}'
     COMPONENT_DESCRIPTION = 'CPLD - Complex Programmable Logic Device'
