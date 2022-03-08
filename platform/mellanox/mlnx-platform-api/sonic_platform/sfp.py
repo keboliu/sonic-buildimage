@@ -2424,24 +2424,23 @@ class RJ45Port(SFP):
         application_advertisement  |1*255VCHAR     |supported applications advertisement
         ================================================================================
         """
-        transceiver_info_dict = {}
-
+        transceiver_info_keys = ['manufacturer',
+                                 'model',
+                                 'vendor_rev',
+                                 'serial',
+                                 'vendor_oui',
+                                 'vendor_date',
+                                 'connector',
+                                 'encoding',
+                                 'ext_identifier',
+                                 'ext_rateselect_compliance',
+                                 'cable_type',
+                                 'cable_length',
+                                 'specification_compliance',
+                                 'nominal_bit_rate',
+                                 'application_advertisement']
+        transceiver_info_dict = dict.fromkeys(transceiver_info_keys, 'N/A')
         transceiver_info_dict['type'] = self.sfp_type
-        transceiver_info_dict['manufacturer'] = 'N/A'
-        transceiver_info_dict['model'] = 'N/A'
-        transceiver_info_dict['vendor_rev'] = 'N/A'
-        transceiver_info_dict['serial'] = 'N/A'
-        transceiver_info_dict['vendor_oui'] = 'N/A'
-        transceiver_info_dict['vendor_date'] = 'N/A'
-        transceiver_info_dict['connector'] = 'N/A'
-        transceiver_info_dict['encoding'] = 'N/A'
-        transceiver_info_dict['ext_identifier'] = 'N/A'
-        transceiver_info_dict['ext_rateselect_compliance'] = 'N/A'
-        transceiver_info_dict['cable_type'] = 'N/A'
-        transceiver_info_dict['cable_length'] = 'N/A'
-        transceiver_info_dict['specification_compliance'] = 'N/A'
-        transceiver_info_dict['nominal_bit_rate'] = 'N/A'
-        transceiver_info_dict['application_advertisement'] = 'N/A'
 
         return transceiver_info_dict
 
