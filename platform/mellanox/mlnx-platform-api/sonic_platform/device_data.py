@@ -263,3 +263,12 @@ class DeviceDataManager:
         if not sfp_data:
             return 0
         return sfp_data.get('max_port_per_line_card', 0)
+
+    @classmethod
+    def get_bios_component(cls):
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            from .component import ComponentBIOSSN2201
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentBIOSSN2201()
+        return None
