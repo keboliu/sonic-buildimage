@@ -32,7 +32,7 @@ DKMS_TMP := $(shell mktemp -u -d -t dkms.XXXXXXXXXX)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf $(MFT_NAME)
-	wget -O $(MFT_TGZ) http://www.mellanox.com/downloads/MFT/$(MFT_TGZ)
+	wget -O $(MFT_TGZ) http://fit69.mtl.labs.mlnx/auto/mswg/release/mft/mft-$(MFT_VERSION)/mft-$(MFT_VERSION)-$(MFT_REVISION)/linux/mft-$(MFT_VERSION)-$(MFT_REVISION)/DEBS/$(MFT_TGZ)
 	tar xzf $(MFT_TGZ)
 
 	pushd $(MFT_NAME)/SDEBS
