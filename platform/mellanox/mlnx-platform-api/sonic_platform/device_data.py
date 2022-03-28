@@ -290,3 +290,20 @@ class DeviceDataManager:
             return ComponentBIOSSN2201()
         return None
 
+    def is_cpu_thermal_control_supported(cls):
+        return cls.get_cpu_thermal_threshold() != (None, None)
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_cpu_thermal_threshold(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
+        if not platform_data:
+            return None, None
+
+        thermal_data = platform_data.get('thermal', None)
+        if not thermal_data:
+            return None, None
+
+        return thermal_data.get('cpu_threshold', (None, None))
+
+

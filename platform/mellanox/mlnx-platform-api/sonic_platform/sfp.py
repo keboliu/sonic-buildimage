@@ -178,16 +178,14 @@ class SFP(SfpOptoeBase):
 
     def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
         super(SFP, self).__init__()
-        
         self._sfp_type = sfp_type
+
         if slot_id == 0: # For non-modular chassis
             self.index = sfp_index + 1
             self.sdk_index = sfp_index
 
-            if self._sfp_type != RJ45_TYPE:
-                # No thermal sensors for RJ45 ports so we do not need to initiallize them.
-                from .thermal import initialize_sfp_thermal
-                self._thermal_list = initialize_sfp_thermal(sfp_index)
+            from .thermal import initialize_sfp_thermal
+            self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
             # (slot_id % MAX_LC_CONUNT - 1) * MAX_PORT_COUNT + (sfp_index + 1) * (MAX_PORT_COUNT / LC_PORT_COUNT)
             max_linecard_count = DeviceDataManager.get_linecard_count()
@@ -195,13 +193,11 @@ class SFP(SfpOptoeBase):
             self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count) + 1
             self.sdk_index = sfp_index
 
-            if self._sfp_type != RJ45_TYPE:
-                from .thermal import initialize_linecard_sfp_thermal
-                self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
+            from .thermal import initialize_linecard_sfp_thermal
+            self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
 
         self.slot_id = slot_id
-        self._sfp_capability = None
-        
+
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -215,9 +211,7 @@ class SFP(SfpOptoeBase):
         Re-initialize this SFP object when a new SFP inserted
         :return:
         """
-        if self.sfp_type != RJ45_TYPE:
-            self.refresh_xcvr_api()
-        self._sfp_capability = None
+        self.refresh_xcvr_api()
 
     def get_presence(self):
         """
@@ -375,7 +369,7 @@ class SFP(SfpOptoeBase):
 
     @classmethod
     def is_port_admin_status_up(cls, sdk_handle, log_port):
-        _, admin_state = cls._fetch_port_status(cls, sdk_handle, log_port);
+        _, admin_state = cls._fetch_port_status(sdk_handle, log_port);
         admin_state == SX_PORT_ADMIN_STATUS_UP
 
 
@@ -580,16 +574,12 @@ class SFP(SfpOptoeBase):
         return error_description
 
 
-class RJ45Port(SFP):
+class RJ45Port(SfpOptoeBase):
     """class derived from SFP, representing RJ45 ports"""
 
     def __init__(self, sfp_index):
-        super(RJ45Port, self).__init__(sfp_index, RJ45_TYPE)
-        self._sfp_type = RJ45_TYPE
-
-    @property
-    def sfp_type(self):
-        return self._sfp_type
+        super(RJ45Port, self).__init__()
+        self.sfp_type = RJ45_TYPE
 
     def get_presence(self):
         """
@@ -600,10 +590,6 @@ class RJ45Port(SFP):
             bool: True if device is present, False if not
         """
         return True
-
-    @property
-    def dom_supported(self):
-        return False
 
     def get_transceiver_info(self):
         """
@@ -700,3 +686,123 @@ class RJ45Port(SFP):
         """
         return False
 
+    def get_transceiver_bulk_status(self):
+        """
+        Retrieves transceiver bulk status of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        RX LOS                     |BOOLEAN        |RX lost-of-signal status,
+                                   |               |True if has RX los, False if not.
+        TX FAULT                   |BOOLEAN        |TX fault status,
+                                   |               |True if has TX fault, False if not.
+        Reset status               |BOOLEAN        |reset status,
+                                   |               |True if SFP in reset, False if not.
+        LP mode                    |BOOLEAN        |low power mode status,
+                                   |               |True in lp mode, False if not.
+        TX disable                 |BOOLEAN        |TX disable status,
+                                   |               |True TX disabled, False if not.
+        TX disabled channel        |HEX            |disabled TX channles in hex,
+                                   |               |bits 0 to 3 represent channel 0
+                                   |               |to channel 3.
+        Temperature                |INT            |module temperature in Celsius
+        Voltage                    |INT            |supply voltage in mV
+        TX bias                    |INT            |TX Bias Current in mA
+        RX power                   |INT            |received optical power in mW
+        TX power                   |INT            |TX output power in mW
+        ========================================================================
+        """
+        transceiver_dom_info_dict = {}
+
+        dom_info_dict_keys = ['temperature',    'voltage',
+                              'rx1power',       'rx2power',
+                              'rx3power',       'rx4power',
+                              'rx5power',       'rx6power',
+                              'rx7power',       'rx8power',
+                              'tx1bias',        'tx2bias',
+                              'tx3bias',        'tx4bias',
+                              'tx5bias',        'tx6bias',
+                              'tx7bias',        'tx8bias',
+                              'tx1power',       'tx2power',
+                              'tx3power',       'tx4power',
+                              'tx5power',       'tx6power',
+                              'tx7power',       'tx8power'
+                             ]
+        transceiver_dom_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
+
+        return transceiver_dom_info_dict
+
+
+    def get_transceiver_threshold_info(self):
+        """
+        Retrieves transceiver threshold info of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        temphighalarm              |FLOAT          |High Alarm Threshold value of temperature in Celsius.
+        templowalarm               |FLOAT          |Low Alarm Threshold value of temperature in Celsius.
+        temphighwarning            |FLOAT          |High Warning Threshold value of temperature in Celsius.
+        templowwarning             |FLOAT          |Low Warning Threshold value of temperature in Celsius.
+        vcchighalarm               |FLOAT          |High Alarm Threshold value of supply voltage in mV.
+        vcclowalarm                |FLOAT          |Low Alarm Threshold value of supply voltage in mV.
+        vcchighwarning             |FLOAT          |High Warning Threshold value of supply voltage in mV.
+        vcclowwarning              |FLOAT          |Low Warning Threshold value of supply voltage in mV.
+        rxpowerhighalarm           |FLOAT          |High Alarm Threshold value of received power in dBm.
+        rxpowerlowalarm            |FLOAT          |Low Alarm Threshold value of received power in dBm.
+        rxpowerhighwarning         |FLOAT          |High Warning Threshold value of received power in dBm.
+        rxpowerlowwarning          |FLOAT          |Low Warning Threshold value of received power in dBm.
+        txpowerhighalarm           |FLOAT          |High Alarm Threshold value of transmit power in dBm.
+        txpowerlowalarm            |FLOAT          |Low Alarm Threshold value of transmit power in dBm.
+        txpowerhighwarning         |FLOAT          |High Warning Threshold value of transmit power in dBm.
+        txpowerlowwarning          |FLOAT          |Low Warning Threshold value of transmit power in dBm.
+        txbiashighalarm            |FLOAT          |High Alarm Threshold value of tx Bias Current in mA.
+        txbiaslowalarm             |FLOAT          |Low Alarm Threshold value of tx Bias Current in mA.
+        txbiashighwarning          |FLOAT          |High Warning Threshold value of tx Bias Current in mA.
+        txbiaslowwarning           |FLOAT          |Low Warning Threshold value of tx Bias Current in mA.
+        ========================================================================
+        """
+        transceiver_dom_threshold_info_dict = {}
+
+        dom_info_dict_keys = ['temphighalarm',    'temphighwarning',
+                              'templowalarm',     'templowwarning',
+                              'vcchighalarm',     'vcchighwarning',
+                              'vcclowalarm',      'vcclowwarning',
+                              'rxpowerhighalarm', 'rxpowerhighwarning',
+                              'rxpowerlowalarm',  'rxpowerlowwarning',
+                              'txpowerhighalarm', 'txpowerhighwarning',
+                              'txpowerlowalarm',  'txpowerlowwarning',
+                              'txbiashighalarm',  'txbiashighwarning',
+                              'txbiaslowalarm',   'txbiaslowwarning'
+                             ]
+        transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
+
+        return transceiver_dom_threshold_info_dict
+
+    def get_reset_status(self):
+        """
+        Retrieves the reset status of SFP
+
+        Returns:
+            A Boolean, True if reset enabled, False if disabled
+
+        for QSFP, originally I would like to make use of Initialization complete flag bit
+        which is at Page a0 offset 6 bit 0 to test whether reset is complete.
+        However as unit testing was carried out I find this approach may fail because:
+            1. we make use of ethtool to read data on I2C bus rather than to read directly
+            2. ethtool is unable to access I2C during QSFP module being reset
+        In other words, whenever the flag is able to be retrived, the value is always be 1
+        As a result, it doesn't make sense to retrieve that flag. Just treat successfully
+        retrieving data as "data ready".
+        for SFP it seems that there is not flag indicating whether reset succeed. However,
+        we can also do it in the way for QSFP.
+        """
+        return False
+
+    def read_eeprom(self, offset, num_bytes):
+        return None
