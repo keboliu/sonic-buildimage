@@ -115,6 +115,19 @@ sfp_value_status_dict = {
     SDK_SFP_STATE_DIS: str(SFP.SFP_STATUS_BIT_REMOVED),
 }
 
+"""
+RJ45 ports events definition
+For RJ45, get_present always returns True.
+In case an unplug / unknown event is reported for a port, error status is leveraged for representing them.
+The following events will be used.
+- Unknown: 2147483648 => 0x80000000
+- Unplug: 1073741824 => 0x40000000
+According to the error status design, the upper half (bits 16 ~ 31) are the events are encoded from bit 16 (0x0001000),
+using those numbers will avoid conflict as much as possible
+"""
+RJ45_UNPLUG_EVENT = '1073741824'
+RJ45_UNKNOWN_EVENT = '2147483648'
+
 # system level event/error
 EVENT_ON_ALL_SFP = '-1'
 SYSTEM_NOT_READY = 'system_not_ready'
@@ -134,13 +147,16 @@ class sfp_event:
     SX_OPEN_TIMEOUT = 5
     SELECT_TIMEOUT = 1
 
-    def __init__(self):
+    def __init__(self, rj45_port_list=None):
         self.swid = 0
         self.handle = None
 
         # Allocate SDK fd and user channel structures
         self.rx_fd_p = new_sx_fd_t_p()
         self.user_channel_p = new_sx_user_channel_t_p()
+
+        self.RJ45_port_list = rj45_port_list
+        self.absent_ports_before_init = []
 
     def initialize(self):
         swid_cnt_p = None
@@ -205,6 +221,30 @@ class sfp_event:
 
             if rc != SX_STATUS_SUCCESS:
                 raise RuntimeError("sx_api_host_ifc_trap_id_register_set failed with rc {}, exiting...".format(rc))
+
+            if self.RJ45_port_list:
+                # Fetch the present state of each RJ45 port.
+                module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
+                module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
+                absent_port_list = []
+
+                for i in self.RJ45_port_list:
+                    module_id_info = sx_mgmt_module_id_info_t()
+                    module_id_info.slot_id = 0
+                    module_id_info.module_id = i
+                    sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
+
+                    rc = sx_mgmt_phy_module_info_get(self.handle, module_id_info_list, 1, module_info_list)
+                    assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
+
+                    mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
+                    if  mod_info.module_state.oper_state not in [SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED]:
+                        absent_port_list.append(i)
+
+                self.absent_ports_before_init = absent_port_list
+
+                delete_sx_mgmt_module_id_info_t_arr(module_id_info_list)
+                delete_sx_mgmt_phy_module_info_t_arr(module_info_list)
         except Exception as e:
             logger.log_error("sfp_event initialization failed due to {}, exiting...".format(repr(e)))
             if swid_cnt_p is not None:
@@ -254,6 +294,15 @@ class sfp_event:
             to repeat calling it with timeout = 0 in a loop until no new notification read (in this case it returns false).
             by doing so all the notifications in the fd can be retrieved through a single call to get_change_event.
         """
+        if self.absent_ports_before_init:
+            # This is the first time this method is called.
+            # We should return the ports that are not present during initialization
+            for i in self.absent_ports_before_init:
+                error_dict[i + 1] = 'Not present'
+                port_change[i + 1] = RJ45_UNPLUG_EVENT
+            self.absent_ports_before_init = []
+            return True
+
         found = 0
 
         try:
@@ -284,7 +333,16 @@ class sfp_event:
                     # 3. and then the sfp module is removed
                     # 4. sfp_event starts to try fetching the change event
                     # in this case found is increased so that True will be returned
-                    logger.log_info("unknown module state {}, maybe the port suffers two adjacent insertion/removal".format(module_state))
+                    # For RJ45 ports, we will report "unknown" event anyway since it's legal
+                    reported = 0
+                    if self.RJ45_port_list:
+                        for port in port_list:
+                            if port in self.RJ45_port_list:
+                                port_change[port+1] = sfp_state
+                                reported += 1
+
+                    if not reported:
+                        logger.log_info("unknown module state {}, maybe the port suffers two adjacent insertion/removal".format(module_state))
                     found += 1
                     continue
 
@@ -314,6 +372,32 @@ class sfp_event:
                     if error_description:
                         error_dict[port+1] = error_description
                     found += 1
+
+        if self.RJ45_port_list:
+            # Translate any plugin/plugout event into error dict for RJ45 ports
+            unknown_port = set()
+            unplug_port = set()
+            for index, event in port_change.items():
+                if index in self.RJ45_port_list:
+                    # Remove it from port event
+                    # check if it's unknown event
+                    if event == '0': # Remove event
+                        unplug_port.add(index)
+                    elif event != '1':
+                        unknown_port.add(index)
+            # This is to leverage TRANSCEIVER_STATUS table to represent 'Not present' and 'Unknown' state
+            # The event should satisfies:
+            # - Vendor specific error bit
+            # - Non-blocking bit
+            # Currently, the 2 MSBs are reserved for this since they are most unlikely to be used in the near future
+            for index in unknown_port:
+                # Bit 31 for unknown
+                port_change[index] = RJ45_UNKNOWN_EVENT
+                error_dict[index] = 'Unknown'
+            for index in unplug_port:
+                # Bit 30 for not present
+                port_change[index] = RJ45_UNPLUG_EVENT
+                error_dict[index] = 'Not present'
 
         return found != 0
 
