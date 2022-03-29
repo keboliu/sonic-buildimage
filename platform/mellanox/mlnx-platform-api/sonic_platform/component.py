@@ -29,6 +29,7 @@ try:
     import glob
     import tempfile
     import subprocess
+    from sonic_py_common import device_info
     if sys.version_info[0] > 2:
         import configparser
     else:
@@ -136,7 +137,17 @@ class ONIEUpdater(object):
 
     ONIE_IMAGE_INFO_COMMAND = '/bin/bash {} -q -i'
 
+    # Upgrading fireware from ONIE is not supported from the beginning on some platforms, like SN2700.
+    # There is a logic to check the ONIE version in order to know whether it is supported.
+    # If it is not supported, we will not proceed and print some error message.
+    # For SN2201, upgrading fireware from ONIE is supported from day one so we do not need to check it.
+    PLATFORM_ALWAYS_SUPPORT_UPGRADE = ['x86_64-nvidia_sn2201-r0']
+
     BIOS_UPDATE_FILE_EXT = '.rom'
+    
+
+    def __init__(self):
+        self.platform = device_info.get_platform()
 
     def __add_prefix(self, image_path):
         if self.BIOS_UPDATE_FILE_EXT not in image_path:
@@ -336,6 +347,9 @@ class ONIEUpdater(object):
             raise
 
     def is_non_onie_firmware_update_supported(self):
+        if self.platform in self.PLATFORM_ALWAYS_SUPPORT_UPGRADE:
+            return True
+
         current_version = self.get_onie_version()
         _, _, major1, minor1, release1, _ = self.parse_onie_version(current_version)
         version1 = int("{}{}{}".format(major1, minor1, release1))
@@ -696,6 +710,37 @@ class ComponentBIOS(Component):
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path)
+
+
+class ComponentBIOSSN2201(Component):
+    COMPONENT_NAME = 'BIOS'
+    COMPONENT_DESCRIPTION = 'BIOS - Basic Input/Output System'
+
+    BIOS_VERSION_COMMAND = 'dmidecode -t0'
+
+    def __init__(self):
+        super(ComponentBIOSSN2201, self).__init__()
+
+        self.name = self.COMPONENT_NAME
+        self.description = self.COMPONENT_DESCRIPTION
+
+    def get_firmware_version(self):
+        cmd = self.BIOS_VERSION_COMMAND
+
+        try:
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
+                                             universal_newlines=True).rstrip('\n')
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Failed to get {} version: {}".format(self.name, str(e)))
+
+        match = re.search('Version: (.*)', output)
+        if match:
+            version = match.group(1)
+        else:
+            version = 'Unknown version'
+
+        return version
 
 
 class ComponentCPLD(Component):
