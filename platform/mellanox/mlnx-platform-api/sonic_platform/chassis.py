@@ -27,7 +27,7 @@ try:
     from sonic_py_common.logger import Logger
     import os
     from functools import reduce
-    from .utils import load_json_file, extract_RJ45_ports_index
+    from .utils import extract_RJ45_ports_index
     from . import utils
     from .device_data import DeviceDataManager
     from .sfp import SFP, RJ45Port, deinitialize_sdk_handle
