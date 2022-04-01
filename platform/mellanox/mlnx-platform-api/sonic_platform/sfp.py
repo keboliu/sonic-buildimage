@@ -803,9 +803,6 @@ class RJ45Port(SfpOptoeBase):
 
         return transceiver_info_dict
 
-    def get_reset_status(self):
-        return False
-
     def get_lpmode(self):
         """
         Retrieves the lpmode (low power mode) status of this SFP
