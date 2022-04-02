@@ -266,14 +266,6 @@ class DeviceDataManager:
         return sfp_data.get('max_port_per_line_card', 0)
 
     @classmethod
-    def get_bios_component(cls):
-        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
-            from .component import ComponentBIOSSN2201
-            # For SN2201, special chass is required for handle BIOS
-            # Currently, only fetching BIOS version is supported
-            return ComponentBIOSSN2201()
-        return None
-
     def is_cpu_thermal_control_supported(cls):
         return cls.get_cpu_thermal_threshold() != (None, None)
 
@@ -290,3 +282,11 @@ class DeviceDataManager:
 
         return thermal_data.get('cpu_threshold', (None, None))
 
+    @classmethod
+    def get_bios_component(cls):
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            from .component import ComponentBIOSSN2201
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentBIOSSN2201()
+        return None
