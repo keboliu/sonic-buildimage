@@ -789,7 +789,7 @@ class ComponentCPLD(Component):
 
         return mst_dev_list[0]
 
-    def __install_firmware(self, image_path):
+    def _install_firmware(self, image_path):
         if not self._check_file_validity(image_path):
             return False
 
@@ -875,9 +875,9 @@ class ComponentCPLD(Component):
                 burn_firmware = mpfa.get_metadata().get('firmware', 'burn')
 
                 print("INFO: Processing {} burn file: firmware install".format(self.name))
-                return self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware))
+                return self._install_firmware(os.path.join(mpfa.get_path(), burn_firmware))
         else:
-            return self.__install_firmware(image_path)
+            return self._install_firmware(image_path)
 
     def update_firmware(self, image_path):
         with MPFAManager(image_path) as mpfa:
@@ -890,11 +890,11 @@ class ComponentCPLD(Component):
             refresh_firmware = mpfa.get_metadata().get('firmware', 'refresh')
 
             print("INFO: Processing {} burn file: firmware install".format(self.name))
-            if not self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware)):
+            if not self._install_firmware(os.path.join(mpfa.get_path(), burn_firmware)):
                 return
 
             print("INFO: Processing {} refresh file: firmware update".format(self.name))
-            self.__install_firmware(os.path.join(mpfa.get_path(), refresh_firmware))
+            self._install_firmware(os.path.join(mpfa.get_path(), refresh_firmware))
 
     @classmethod
     def get_component_list(cls):
@@ -907,3 +907,19 @@ class ComponentCPLD(Component):
             component_list.append(cls(cpld_idx))
 
         return component_list
+
+
+class ComponentCPLDSN2201(ComponentCPLD):
+    CPLD_FIRMWARE_UPDATE_COMMAND = 'cpldupdate --gpio {} --uncustomized --print-progress'
+
+    def _install_firmware(self, image_path):
+        cmd = self.CPLD_FIRMWARE_UPDATE_COMMAND.format(image_path)
+
+        try:
+            print("INFO: Installing {} firmware update: path={}".format(self.name, image_path))
+            subprocess.check_call(cmd.split(), universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
+            return False
+
+        return True
