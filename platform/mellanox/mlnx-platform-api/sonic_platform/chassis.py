@@ -530,11 +530,8 @@ class Chassis(ChassisBase):
             from .component import ComponentONIE, ComponentSSD, ComponentBIOS, ComponentCPLD
             self._component_list.append(ComponentONIE())
             self._component_list.append(ComponentSSD())
-            biosComponent = DeviceDataManager.get_bios_component()
-            if not biosComponent:
-                biosComponent = ComponentBIOS()
-            self._component_list.append(biosComponent)
-            self._component_list.extend(ComponentCPLD.get_component_list())
+            self._component_list.append(DeviceDataManager.get_bios_component())
+            self._component_list.extend(DeviceDataManager.get_cpld_component_list())
 
     def get_num_components(self):
         """
