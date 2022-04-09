@@ -827,7 +827,7 @@ class ComponentCPLD(Component):
         # Install burn. Error if fail.
         if not self.install_firmware(image_path):
             return FW_AUTO_ERR_UNKNOWN
-            
+
         # Schedule refresh
         return FW_AUTO_SCHEDULED    
 
@@ -910,6 +910,8 @@ class ComponentCPLD(Component):
 
 
 class ComponentCPLDSN2201(ComponentCPLD):
+    CPLD_VERSION_MAX_LENGTH = 3
+
     CPLD_FIRMWARE_UPDATE_COMMAND = 'cpldupdate --gpio {} --uncustomized --print-progress'
 
     def _install_firmware(self, image_path):
