@@ -191,6 +191,8 @@ case "${cmd}" in
                     exit 0
                 else
                     system_reboot
+                    echo "NOTICE: Platform reboot failed. Fallback to Linux reboot"
+                    exit 0
                 fi
             else
                 echo "ERROR: failed to enable ONIE firmware update mode"
