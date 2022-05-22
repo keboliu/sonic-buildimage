@@ -102,6 +102,9 @@ class Psu(PsuBase):
         self.psu_orange_led_path = "led_psu_orange"
         self.psu_led_cap_path = "led_psu_capability"
 
+        # Set PSU status led to green during init stage
+        self.set_status_led(Led.STATUS_LED_COLOR_GREEN)
+
 
     def get_name(self):
         return self._name
