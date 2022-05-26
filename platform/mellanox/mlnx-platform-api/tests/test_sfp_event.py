@@ -31,7 +31,7 @@ class TestSfpEvent(object):
         os.environ["MLNX_PLATFORM_API_UNIT_TESTING"] = "1"
 
     @patch('select.select', MagicMock(return_value=([99], None, None)))
-    def test_check_sfp_status_xsfp(self):
+    def test_check_sfp_status(self):
         from sonic_platform.sfp_event import SDK_SFP_STATE_IN, SDK_SFP_STATE_OUT, SDK_SFP_STATE_ERR
         from sonic_platform.sfp_event import SDK_ERRORS_TO_ERROR_BITS, SDK_ERRORS_TO_DESCRIPTION, SDK_SFP_BLOCKING_ERRORS
 
@@ -59,46 +59,3 @@ class TestSfpEvent(object):
         if description:
             assert 1 in error_dict and error_dict[1] == description
             assert 2 in error_dict and error_dict[2] == description
-
-    @patch('select.select', MagicMock(return_value=([99], None, None)))
-    def test_check_sfp_status_rj45(self):
-        from sonic_platform.sfp_event import sfp_event
-        from sonic_platform.sfp_event import SDK_SFP_STATE_IN, SDK_SFP_STATE_OUT
-        from sonic_platform.sfp_event import RJ45_UNPLUG_EVENT, RJ45_UNKNOWN_EVENT
-
-        # Verify absent ports before initialization
-        event = sfp_event([0, 1, 2, 3])
-        event.absent_ports_before_init = [0,1]
-        port_change = {}
-        error_dict = {}
-        found = event.check_sfp_status(port_change, error_dict, 0)
-        assert found
-        assert port_change == {1: RJ45_UNPLUG_EVENT, 2: RJ45_UNPLUG_EVENT}
-        assert error_dict == {1: 'Not present', 2: 'Not present'}
-
-        # Unplug event
-        event.on_pmpe = MagicMock(return_value=(True, [2], SDK_SFP_STATE_OUT, None))
-        port_change.clear()
-        error_dict.clear()
-        found = event.check_sfp_status(port_change, error_dict, 0)
-        assert found
-        assert port_change == {3: RJ45_UNPLUG_EVENT}
-        assert error_dict == {3: 'Not present'}
-
-        # Plug event
-        event.on_pmpe = MagicMock(return_value=(True, [2], SDK_SFP_STATE_IN, None))
-        port_change.clear()
-        error_dict.clear()
-        found = event.check_sfp_status(port_change, error_dict, 0)
-        assert found
-        assert port_change == {3: str(SDK_SFP_STATE_IN)}
-        assert error_dict == {}
-
-        # Unknown event
-        event.on_pmpe = MagicMock(return_value=(True, [2], -1, None))
-        port_change.clear()
-        error_dict.clear()
-        found = event.check_sfp_status(port_change, error_dict, 0)
-        assert found
-        assert port_change == {3: RJ45_UNKNOWN_EVENT}
-        assert error_dict == {3: 'Unknown'}
