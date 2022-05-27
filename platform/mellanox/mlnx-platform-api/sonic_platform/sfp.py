@@ -706,28 +706,6 @@ class SFP(NvidiaSFPCommon):
         """
         return True
 
-    '''
-    def _get_error_code(self):
-        """
-        Get error code of the SFP module
-
-        Returns:
-            The error code fetch from SDK API
-        """
-        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
-        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
-
-        module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
-        module_id_info.module_id = self.sdk_index
-        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
-
-        rc = sx_mgmt_phy_module_info_get(self.sdk_handle, module_id_info_list, 1, module_info_list)
-        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
-
-        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
-        return mod_info.module_state.oper_state, mod_info.module_state.error_type
-    '''
     @classmethod
     def _get_error_description_dict(cls):
         return {0: cls.SFP_ERROR_DESCRIPTION_POWER_BUDGET_EXCEEDED,
