@@ -237,7 +237,44 @@ class SdkHandleContext(object):
         deinitialize_sdk_handle(self.sdk_handle)
 
 
-class SFP(SfpOptoeBase):
+class NvidiaSFPCommon(SfpOptoeBase):
+    def __init__(self, sfp_index):
+        super(NvidiaSFPCommon, self).__init__()
+        self.index = sfp_index + 1
+        self.sdk_index = sfp_index
+
+    @property
+    def sdk_handle(self):
+        if not SFP.shared_sdk_handle:
+            SFP.shared_sdk_handle = initialize_sdk_handle()
+            if not SFP.shared_sdk_handle:
+                logger.log_error('Failed to open SDK handle')
+        return SFP.shared_sdk_handle
+
+    @classmethod
+    def _get_module_info(self, sdk_handle, sdk_index):
+        """
+        Get error code of the SFP module
+
+        Returns:
+            The error code fetch from SDK API
+        """
+        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
+        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
+
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
+        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
+
+        rc = sx_mgmt_phy_module_info_get(sdk_handle, module_id_info_list, 1, module_info_list)
+        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
+
+        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
+        return mod_info.module_state.oper_state, mod_info.module_state.error_type
+
+
+class SFP(NvidiaSFPCommon):
     """Platform-specific SFP class"""
     shared_sdk_handle = None
     SFP_MLNX_ERROR_DESCRIPTION_LONGRANGE_NON_MLNX_CABLE = 'Long range for non-Mellanox cable or module'
@@ -253,13 +290,10 @@ class SFP(SfpOptoeBase):
     SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
 
     def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
-        super(SFP, self).__init__()
+        super(SFP, self).__init__(sfp_index)
         self._sfp_type = sfp_type
 
         if slot_id == 0: # For non-modular chassis
-            self.index = sfp_index + 1
-            self.sdk_index = sfp_index
-
             from .thermal import initialize_sfp_thermal
             self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
@@ -284,6 +318,7 @@ class SFP(SfpOptoeBase):
             logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
         return device_name
 
+    '''
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -291,6 +326,7 @@ class SFP(SfpOptoeBase):
             if not SFP.shared_sdk_handle:
                 logger.log_error('Failed to open SDK handle')
         return SFP.shared_sdk_handle
+    '''
 
     def reinit(self):
         """
@@ -673,27 +709,6 @@ class SFP(SfpOptoeBase):
         """
         return True
 
-    def _get_error_code(self):
-        """
-        Get error code of the SFP module
-
-        Returns:
-            The error code fetch from SDK API
-        """
-        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
-        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
-
-        module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
-        module_id_info.module_id = self.sdk_index
-        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
-
-        rc = sx_mgmt_phy_module_info_get(self.sdk_handle, module_id_info_list, 1, module_info_list)
-        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
-
-        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
-        return mod_info.module_state.oper_state, mod_info.module_state.error_type
-
     @classmethod
     def _get_error_description_dict(cls):
         return {0: cls.SFP_ERROR_DESCRIPTION_POWER_BUDGET_EXCEEDED,
@@ -714,12 +729,12 @@ class SFP(SfpOptoeBase):
         Get error description
 
         Args:
-            error_code: The error code returned by _get_error_code
+            error_code: The error code returned by _get_module_info
 
         Returns:
             The error description
         """
-        oper_status, error_code = self._get_error_code()
+        oper_status, error_code = self._get_module_info(self.sdk_handle, self.sdk_index)
         if oper_status == SX_PORT_MODULE_STATUS_INITIALIZING:
             error_description = self.SFP_STATUS_INITIALIZING
         elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED:
@@ -739,12 +754,27 @@ class SFP(SfpOptoeBase):
         return error_description
 
 
-class RJ45Port(SfpOptoeBase):
+class RJ45Port(NvidiaSFPCommon):
     """class derived from SFP, representing RJ45 ports"""
 
     def __init__(self, sfp_index):
-        super(RJ45Port, self).__init__()
+        super(RJ45Port, self).__init__(sfp_index)
         self.sfp_type = RJ45_TYPE
+
+    @classmethod
+    def _get_presence(cls, sdk_handle, sdk_index):
+        """Class level method to get low power mode.
+
+        Args:
+            sdk_handle: SDK handle
+            sdk_index (integer): SDK port index
+            slot_id (integer): Slot ID
+
+        Returns:
+            [boolean]: True if low power mode is on else off
+        """
+        oper_status, _ = cls._get_module_info(sdk_handle, sdk_index)
+        return print(oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
 
     def get_presence(self):
         """
@@ -754,7 +784,22 @@ class RJ45Port(SfpOptoeBase):
         Returns:
             bool: True if device is present, False if not
         """
-        return True
+        if utils.is_host():
+            # To avoid performance issue,
+            # call class level method to avoid initialize the whole sonic platform API
+            get_presence_code = 'from sonic_platform import sfp;\n' \
+                              'with sfp.SdkHandleContext() as sdk_handle:' \
+                              'print(sfp.RJ45Port._get_presence(sdk_handle, {}))'.format(self.sdk_index)
+            presence_cmd = "docker exec pmon python3 -c \"{}\"".format(get_presence_code)
+            try:
+                output = subprocess.check_output(presence_cmd, shell=True, universal_newlines=True)
+                return 'True' in output
+            except subprocess.CalledProcessError as e:
+                print("Error! Unable to get presence for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
+                return False
+        else:
+            oper_status, _ = self._get_module_info(self.sdk_handle, self.sdk_index);
+            return (oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
 
     def get_transceiver_info(self):
         """
@@ -841,7 +886,7 @@ class RJ45Port(SfpOptoeBase):
         Get error description
 
         Args:
-            error_code: The error code returned by _get_error_code
+            error_code: Always false on SN2201
 
         Returns:
             The error description
