@@ -159,8 +159,7 @@ DEVICE_DATA = {
         'thermal': {
             "capability": {
                 "comex_amb": False,
-                "cpu_amb": True,
-                "swb_amb": True
+                "cpu_amb": True
             }
         }
     },
