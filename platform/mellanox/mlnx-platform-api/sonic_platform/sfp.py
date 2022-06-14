@@ -1013,3 +1013,10 @@ class RJ45Port(NvidiaSFPCommon):
 
     def read_eeprom(self, offset, num_bytes):
         return None
+
+    def reinit(self):
+        """
+        Nothing to do for RJ45. Just provide it to avoid exception
+        :return:
+        """
+        return
