@@ -340,7 +340,7 @@ class Chassis(ChassisBase):
         # Initialize SFP event first
         if not self.sfp_event:
             from .sfp_event import sfp_event
-            self.sfp_event = sfp_event()
+            self.sfp_event = sfp_event(self.RJ45_port_list)
             self.sfp_event.initialize()
 
         wait_for_ever = (timeout == 0)
