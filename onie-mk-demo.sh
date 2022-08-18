@@ -122,7 +122,6 @@ echo -n "."
     echo "Error: $sharch not found"
     clean_up 1
 }
-sha1=$(cat $sharch | sha1sum | awk '{print $1}')
 echo -n "."
 cp $installer_dir/sharch_body.sh $output_file || {
     echo "Error: Problems copying sharch_body.sh"
@@ -130,10 +129,11 @@ cp $installer_dir/sharch_body.sh $output_file || {
 }
 
 # Replace variables in the sharch template
-sed -i -e "s/%%IMAGE_SHA1%%/$sha1/" $output_file
 echo -n "."
 tar_size="$(wc -c < "${sharch}")"
 cat $sharch >> $output_file
+sha1=$(sed -e '1,/^exit_marker$/d' "$output_file" | sha1sum | awk '{ print $1 }')
+sed -i -e "s/%%IMAGE_SHA1%%/$sha1/" $output_file
 sed -i -e "s|%%PAYLOAD_IMAGE_SIZE%%|${tar_size}|" ${output_file}
 echo "secure upgrade flags: SECURE_UPGRADE_MODE = $SECURE_UPGRADE_MODE, \
 SECURE_UPGRADE_DEV_SIGNING_KEY = $SECURE_UPGRADE_DEV_SIGNING_KEY, SECURE_UPGRADE_DEV_SIGNING_CERT = $SECURE_UPGRADE_DEV_SIGNING_CERT"
@@ -168,7 +168,7 @@ if [ "$SECURE_UPGRADE_MODE" = "dev" -o "$SECURE_UPGRADE_MODE" = "prod" ]; then
     # append signature to binary
     cat ${CMS_SIG} >> ${output_file} 
     sudo rm -rf ${CMS_SIG}
-elif [ "$SECURE_UPGRADE_MODE" -ne "no_sign" ]; then
+elif [ "$SECURE_UPGRADE_MODE" != "no_sign" ]; then
     echo "SECURE_UPGRADE_MODE not defined or defined as $SECURE_UPGRADE_MODE - build without signing"
 fi
 
