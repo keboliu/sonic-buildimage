@@ -122,6 +122,7 @@ echo -n "."
     echo "Error: $sharch not found"
     clean_up 1
 }
+sha1=$(cat $sharch | sha1sum | awk '{print $1}')
 echo -n "."
 cp $installer_dir/sharch_body.sh $output_file || {
     echo "Error: Problems copying sharch_body.sh"
@@ -129,44 +130,40 @@ cp $installer_dir/sharch_body.sh $output_file || {
 }
 
 # Replace variables in the sharch template
+sed -i -e "s/%%IMAGE_SHA1%%/$sha1/" $output_file
 echo -n "."
 tar_size="$(wc -c < "${sharch}")"
-cat $sharch >> $output_file
-sha1=$(sed -e '1,/^exit_marker$/d' "$output_file" | sha1sum | awk '{ print $1 }')
-sed -i -e "s/%%IMAGE_SHA1%%/$sha1/" $output_file
 sed -i -e "s|%%PAYLOAD_IMAGE_SIZE%%|${tar_size}|" ${output_file}
+cat $sharch >> $output_file
 echo "secure upgrade flags: SECURE_UPGRADE_MODE = $SECURE_UPGRADE_MODE, \
 SECURE_UPGRADE_DEV_SIGNING_KEY = $SECURE_UPGRADE_DEV_SIGNING_KEY, SECURE_UPGRADE_DEV_SIGNING_CERT = $SECURE_UPGRADE_DEV_SIGNING_CERT"
 
 if [ "$SECURE_UPGRADE_MODE" = "dev" -o "$SECURE_UPGRADE_MODE" = "prod" ]; then
     CMS_SIG="${tmp_dir}/signature.sig"
-
     echo "$0 Creating CMS signature for ${output_file} with  ${key_file}. Output file ${CMS_SIG}"
     DIR="$(dirname "$0")"
-    
     scripts_dir="${DIR}/scripts"
     if [ "$SECURE_UPGRADE_MODE" = "dev" ]; then
         . ${scripts_dir}/sign_image_dev.sh
-        sign_image_dev ${cert_file} ${key_file} ${output_file} ${CMS_SIG} || { 
+        sign_image_dev ${cert_file} ${key_file} ${output_file} ${CMS_SIG} || {
         echo "CMS sign error $?"
         sudo rm -rf ${CMS_SIG}
         clean_up 1
     }
     else # "$SECURE_UPGRADE_MODE" has to be equal to "prod"
         . ${scripts_dir}/sign_image_${platform}.sh
-        sign_image_prod ${output_file} ${CMS_SIG} || { 
+        sign_image_prod ${output_file} ${CMS_SIG} || {
         echo "CMS sign error $?"
         sudo rm -rf ${CMS_SIG}
         clean_up 1
     }
     fi
-    
     [ -f "$CMS_SIG" ] || {
          echo "Error: CMS signature not created - exiting without signing"
          clean_up 1
     }
     # append signature to binary
-    cat ${CMS_SIG} >> ${output_file} 
+    cat ${CMS_SIG} >> ${output_file}
     sudo rm -rf ${CMS_SIG}
 elif [ "$SECURE_UPGRADE_MODE" != "no_sign" ]; then
     echo "SECURE_UPGRADE_MODE not defined or defined as $SECURE_UPGRADE_MODE - build without signing"
