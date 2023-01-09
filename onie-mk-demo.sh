@@ -14,6 +14,7 @@ output_file=$6
 demo_type=$7
 image_version=$8
 onie_image_part_size=$9
+onie_installer_payload=${10}
 cert_file=${11}
 key_file=${12}
 
@@ -102,7 +103,7 @@ sed -i -e "s/%%DEMO_TYPE%%/$demo_type/g" \
        -e "s@%%OUTPUT_RAW_IMAGE%%@$output_raw_image@" \
     $tmp_installdir/install.sh || clean_up 1
 echo -n "."
-cp -r $* $tmp_installdir || clean_up 1
+cp -r $onie_installer_payload $tmp_installdir || clean_up 1
 echo -n "."
 [ -r "$platform_conf" ] && {
     cp $platform_conf $tmp_installdir || clean_up 1
