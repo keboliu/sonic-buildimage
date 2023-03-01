@@ -1,0 +1,25 @@
+From 177db6873bee9251f2abfe9cda7c857bbbe07ab5 Mon Sep 17 00:00:00 2001
+From: Kebo Liu <kebol@nvidia.com>
+Date: Wed, 1 Mar 2023 14:11:41 +0800
+Subject: [PATCH] Enable hw-mgmt-tc by default
+
+Signed-off-by: Kebo Liu <kebol@nvidia.com>
+---
+ debian/rules | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/debian/rules b/debian/rules
+index 089c4c7..3cfd214 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -31,6 +31,7 @@ override_dh_installinit:
+ 
+ override_dh_systemd_enable:
+ 	dh_systemd_enable --name=hw-management
++	dh_systemd_enable --name=hw-management-tc
+ 
+ override_dh_systemd_start:
+ 	dh_systemd_start --name=hw-management
+-- 
+1.9.1
+
