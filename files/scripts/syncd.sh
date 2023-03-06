@@ -23,7 +23,7 @@ function startplatform() {
 
         debug "Starting Firmware update procedure"
         /usr/bin/mst start --with_i2cdev
-        /usr/bin/mlnx-fw-upgrade.sh
+#        /usr/bin/mlnx-fw-upgrade.sh
         /etc/init.d/sxdkernel restart
         debug "Firmware update procedure ended"
     fi
