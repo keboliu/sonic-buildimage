@@ -13,6 +13,7 @@ WEB_VERSION_FILE=$VERSION_PATH/versions-web
 BUILD_WEB_VERSION_FILE=$BUILD_VERSION_PATH/versions-web
 REPR_MIRROR_URL_PATTERN='http:\/\/packages.trafficmanager.net\/'
 DPKG_INSTALLTION_LOCK_FILE=/tmp/.dpkg_installation.lock
+GET_RETRY_COUNT=5
 
 . $BUILDINFO_PATH/config/buildinfo.config
 if [ -e /vcache ]; then
@@ -166,8 +167,22 @@ download_packages()
         fi
     done
 
-    $REAL_COMMAND "${parameters[@]}"
-    local result=$?
+    # Retry if something super-weird has happened. Use --retry-connrefused
+    # option for wget/curl.
+    # --retry-connrefused - Consider "connection refused" a transient error and
+    # try again. Normally wget/curl gives up on a URL when it is unable to
+    # connect to the site because failure to connect is taken as a sign that the
+    # server is not running at all and that retries would not help. This option
+    # is for mirroring unreliable sites whose servers tend to disappear for
+    # short periods of time.
+    for ((i = 1; i <= GET_RETRY_COUNT; i++)); do
+        $REAL_COMMAND --retry-connrefused "${parameters[@]}"
+        local result=$?
+        if [ $result -eq 0 ]; then
+            break
+        fi
+        log_err "Try $i: $REAL_COMMAND failed to get: ${parameters[@]}. Retry.."
+    done
 
     for filename in "${!filenames[@]}"
     do
