@@ -16,10 +16,10 @@
 #
 # Mellanox SAI
 
-MFT_VERSION = 4.22.1
-MFT_REVISION = 15
+MFT_VERSION = 4.23.0
+MFT_REVISION = 309
 
-MLNX_MFT_INTERNAL_SOURCE_BASE_URL =
+MLNX_MFT_INTERNAL_SOURCE_BASE_URL = http://nbu-nfs.mellanox.com/auto/mswg/release/mft/mft-4.23.0/mft-4.23.0-309/linux/mft-4.23.0-309/DEBS/
 
 ifneq ($(MLNX_MFT_INTERNAL_SOURCE_BASE_URL), )
 MFT_FROM_INTERNAL = y
