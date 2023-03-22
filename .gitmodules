@@ -4,8 +4,8 @@
 	branch = 202211_SPC4_ES
 [submodule "sonic-linux-kernel"]
 	path = src/sonic-linux-kernel
-	url = https://github.com/sonic-net/sonic-linux-kernel
-	branch = 202211
+	url = https://github.com/keboliu/sonic-linux-kernel
+	branch = 202211_SPC4_ES
 [submodule "sonic-sairedis"]
 	path = src/sonic-sairedis
 	url = https://github.com/keboliu/sonic-sairedis
