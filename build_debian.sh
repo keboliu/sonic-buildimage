@@ -661,7 +661,7 @@ if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_
             exit 1
         fi
 
-        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH -r $FILESYSTEM_ROOT -l $LINUX_KERNEL_VERSION -o $OUTPUT_SEC_BOOT_DIR -m $SECURE_UPGRADE_MODE
+        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH -r $FILESYSTEM_ROOT -l $LINUX_KERNEL_VERSION -o $OUTPUT_SEC_BOOT_DIR -m $SECURE_UPGRADE_MODE -c $VAULT_ROLE_CREDS
         
         # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
         sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \
