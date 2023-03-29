@@ -656,13 +656,12 @@ if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_
     elif [[ $SECURE_UPGRADE_MODE == "prod" ]]; then
         #  Here Vendor signing should be implemented
         OUTPUT_SEC_BOOT_DIR=$FILESYSTEM_ROOT/boot
-        SECURE_UPGRADE_PROD_SIGNING_TOOL_DST = /sonic/scripts/$(shell basename -- $SECURE_UPGRADE_PROD_SIGNING_TOOL)
-        if [ ! -f $SECURE_UPGRADE_PROD_SIGNING_TOOL_DST ]; then
-            echo "Error: SONiC SECURE_UPGRADE_PROD_SIGNING_TOOL_DST=$SECURE_UPGRADE_PROD_SIGNING_TOOL_DST script missing"
+        if [ ! -f $sonic_su_prod_signing_tool ]; then
+            echo "Error: SONiC sonic_su_prod_signing_tool=$sonic_su_prod_signing_tool script missing"
             exit 1
         fi
 
-        sudo $SECURE_UPGRADE_PROD_SIGNING_TOOL_DST $CONFIGURED_ARCH $FILESYSTEM_ROOT $LINUX_KERNEL_VERSION $OUTPUT_SEC_BOOT_DIR
+        sudo $sonic_su_prod_signing_tool $CONFIGURED_ARCH $FILESYSTEM_ROOT $LINUX_KERNEL_VERSION $OUTPUT_SEC_BOOT_DIR
         
         # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
         sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \
