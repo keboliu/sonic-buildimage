@@ -19,18 +19,22 @@ sign_image_prod()
       exit 1
   fi
 
-  SECURE_MODE_FLAG=""
-  if [ $SECURE_MODE != "staging" && $SECURE_MODE != "prod" ]; then
-      echo "ERROR: SECURE_MODE=${SECURE_MODE} is incorrect, should be prod or staging"
+
+
+  : "${SECURE_MODE_FLAG:=prod}"
+  if [[ $SECURE_MODE_FLAG != "staging" && $SECURE_MODE_FLAG != "prod" ]]; then
+      echo "ERROR: SECURE_MODE_FLAG=${SECURE_MODE_FLAG} is incorrect, should be prod or staging"
+      print_usage
       exit 1
-  elif [ "$SECURE_MODE" = "prod" ]; then
-      SECURE_MODE_FLAG=--$SECURE_MODE
+  fi
+  if [[ $SECURE_MODE == "prod" ]]; then
+      SIGN_FLAG="--prod"
   fi
 
   SERVER_SIGN_SCRIPT=/opt/nvidia/sonic_sign.sh
   # signing with prod server
   ${SERVER_SIGN_SCRIPT} --file ${UNSIGNED_IMG} \
-                      --type CMS $SECURE_MODE_FLAG \
+                      --type CMS $SIGN_FLAG \
                       --description 'CMS Signing NVOS IMG' \
                       --out-file ${OUT_CMS_SIGNATURE} || exit $? ;
   echo "secure upgrade remote signing DONE"
