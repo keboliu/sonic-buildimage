@@ -5,9 +5,8 @@ sign_image_prod()
 {
   UNSIGNED_IMG=$1
   OUT_CMS_SIGNATURE=$2
-  SECURE_MODE=$3
   echo "secure upgrade remote signing START"
-  echo "sign_image_prod params: UNSIGNED_IMG=$UNSIGNED_IMG, OUT_CMS_SIGNATURE=$OUT_CMS_SIGNATURE, SECURE_MODE=$SECURE_MODE"
+  echo "sign_image_prod params: UNSIGNED_IMG=$UNSIGNED_IMG, OUT_CMS_SIGNATURE=$OUT_CMS_SIGNATURE, SECURE_MODE_FLAG=$SECURE_MODE_FLAG"
 
   if [ ! -f "${UNSIGNED_IMG}" ]; then
       echo "ERROR: UNSIGNED_IMG=${UNSIGNED_IMG} file does not exist"
@@ -27,7 +26,7 @@ sign_image_prod()
       print_usage
       exit 1
   fi
-  if [[ $SECURE_MODE == "prod" ]]; then
+  if [[ $SECURE_MODE_FLAG == "prod" ]]; then
       SIGN_FLAG="--prod"
   fi
 
