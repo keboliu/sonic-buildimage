@@ -26,12 +26,17 @@ sign_image_prod()
       print_usage
       exit 1
   fi
-  SIGN_FLAG="--prod"
+  if [[ "${SECURE_MODE_FLAG}" == "prod" ]]; then
+      SIGN_FLAG="--prod"
+  fi
+
   echo "ERROR: SECURE_MODE_FLAG=${SECURE_MODE_FLAG} & SIGN_FLAG=${SIGN_FLAG} "
+  HOST_PATH=$(docker container inspect $(hostname) | jq -c -r .[].HostConfig.Binds | jq -r '.[]' | grep -e ":/sonic$" | cut -d ":" -f1)
 
   SERVER_SIGN_SCRIPT=/opt/nvidia/sonic_sign.sh
   # signing with prod server
-  ${SERVER_SIGN_SCRIPT} --file ${UNSIGNED_IMG} \
+  ${SERVER_SIGN_SCRIPT} --sandbox ${HOST_PATH}
+                      --file ${UNSIGNED_IMG} \
                       --type CMS --prod \
                       --description 'CMS Signing NVOS IMG' \
                       --out-file ${OUT_CMS_SIGNATURE} || exit $? ;
