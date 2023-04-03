@@ -32,7 +32,7 @@ sign_image_prod()
   SERVER_SIGN_SCRIPT=/opt/nvidia/sonic_sign.sh
   # signing with prod server
   ${SERVER_SIGN_SCRIPT} --file ${UNSIGNED_IMG} \
-                      --type CMS '--prod  \
+                      --type CMS --prod \
                       --description 'CMS Signing NVOS IMG' \
                       --out-file ${OUT_CMS_SIGNATURE} || exit $? ;
   echo "secure upgrade remote signing DONE"
