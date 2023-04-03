@@ -36,7 +36,7 @@ sign_image_prod()
   SERVER_SIGN_SCRIPT=/opt/nvidia/sonic_sign.sh
   # signing with prod server
   ${SERVER_SIGN_SCRIPT} --sandbox ${HOST_PATH} \
-                      --file ${UNSIGNED_IMG} \
+                      --file target/${UNSIGNED_IMG} \
                       --type CMS --prod \
                       --description 'CMS Signing NVOS IMG' \
                       --out-file ${OUT_CMS_SIGNATURE} || exit $? ;
