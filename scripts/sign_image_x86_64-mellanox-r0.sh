@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 sign_image_prod()
@@ -26,14 +26,15 @@ sign_image_prod()
       print_usage
       exit 1
   fi
-  if [[ $SECURE_MODE_FLAG == "prod" ]]; then
+  if [[ ${SECURE_MODE_FLAG} == "prod" ]]; then
       SIGN_FLAG="--prod"
   fi
+  echo "ERROR: SECURE_MODE_FLAG=${SECURE_MODE_FLAG} & SIGN_FLAG=${SIGN_FLAG} "
 
   SERVER_SIGN_SCRIPT=/opt/nvidia/sonic_sign.sh
   # signing with prod server
   ${SERVER_SIGN_SCRIPT} --file ${UNSIGNED_IMG} \
-                      --type CMS $SIGN_FLAG \
+                      --type CMS ${SIGN_FLAG} \
                       --description 'CMS Signing NVOS IMG' \
                       --out-file ${OUT_CMS_SIGNATURE} || exit $? ;
   echo "secure upgrade remote signing DONE"
