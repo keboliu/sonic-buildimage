@@ -1,5 +1,4 @@
 # Subdirectories
-mlnx-sai/SAI-Implementation/*
 hw-management/*
 !hw-management/Makefile
 !hw-management/*.patch
