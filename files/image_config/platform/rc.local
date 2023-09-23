@@ -207,6 +207,16 @@ program_console_speed()
     systemctl daemon-reload
 }
 
+handle_platform_specific_config()
+{
+    platform_name=$1
+    # Nvidia x86_64-mlnx_msn2700-r0 need a special rsyslog configuration,
+    # detail infomation please check the config file itself.
+    if [ "$platfrom_name" == "x86_64-mlnx_msn2700-r0" ]; then
+        [ -f /usr/share/sonic/device/$platfrom_name/01_mlnx_2700_syslog.conf ] && cp /usr/share/sonic/device/$platfrom_name/01_mlnx_2700_syslog.conf /etc/rsyslog.d/01_mlnx_2700_syslog.conf
+    fi
+}
+
 
 #### Begin Main Body ####
 
@@ -395,6 +405,9 @@ if [ -f $FIRST_BOOT_FILE ]; then
 
     # Kdump tools configuration
     [ -f /etc/default/kdump-tools ] && sed -i -e "s/__PLATFORM__/$platform/g" /etc/default/kdump-tools
+
+    # Handle platform specific config
+    handle_platform_specific_config $platform
 
     firsttime_exit
 fi
