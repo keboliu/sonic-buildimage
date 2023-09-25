@@ -209,11 +209,16 @@ program_console_speed()
 
 handle_platform_specific_config()
 {
-    platform_name=$1
     # Nvidia x86_64-mlnx_msn2700-r0 need a special rsyslog configuration,
     # detail infomation please check the config file itself.
-    if [ "$platfrom_name" == "x86_64-mlnx_msn2700-r0" ]; then
-        [ -f /usr/share/sonic/device/$platfrom_name/01_mlnx_2700_syslog.conf ] && cp /usr/share/sonic/device/$platfrom_name/01_mlnx_2700_syslog.conf /etc/rsyslog.d/01_mlnx_2700_syslog.conf
+    platform_name=$1
+    src_file_name=/usr/share/sonic/device/$platform_name/01_mlnx_2700_syslog.conf
+    target_file_name=/etc/rsyslog.d/01_mlnx_2700_syslog.conf
+
+    if [ "$platform_name" = "x86_64-mlnx_msn2700a1-r0" ] || [ "$platform_name" = "x86_64-mlnx_msn2700-r0" ]; then
+        if [ -e $src_file_name ]; then
+            cp $src_file_name $target_file_name
+        fi
     fi
 }
 
