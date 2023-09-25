@@ -209,8 +209,9 @@ program_console_speed()
 
 handle_platform_specific_config()
 {
-    # Nvidia x86_64-mlnx_msn2700-r0 need a special rsyslog configuration,
-    # detail infomation please check the config file itself.
+    # Mellanox MSN2700 platforms need a special rsyslog configuration to 
+    # eliminate some non-functional error log.
+    # Copy this configuration file to /etc/rsyslog.d/ during first time boot.
     platform_name=$1
     src_file_name=/usr/share/sonic/device/$platform_name/01_mlnx_2700_syslog.conf
     target_file_name=/etc/rsyslog.d/01_mlnx_2700_syslog.conf
