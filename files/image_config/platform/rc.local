@@ -222,7 +222,6 @@ handle_platform_specific_config()
     fi
 }
 
-
 #### Begin Main Body ####
 
 logger "SONiC version ${SONIC_VERSION} starting up..."
