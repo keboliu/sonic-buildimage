@@ -399,7 +399,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 	lsof                    \
 	sysstat                 \
 	xxd                     \
-	zstd
+	zstd                    \
+	ethtool
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
