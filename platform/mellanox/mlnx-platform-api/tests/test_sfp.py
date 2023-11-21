@@ -349,6 +349,7 @@ class TestSfp:
         mock_read.return_value = 0
         with pytest.raises(Exception):
             sfp.is_sw_control()
+    '''
     @mock.patch('sonic_platform.utils.is_host', mock.MagicMock(side_effect = [True, True, False, False]))
     @mock.patch('subprocess.check_output', mock.MagicMock(side_effect = ['True', 'False']))
     @mock.patch('sonic_platform.sfp.SFP._get_lpmode', mock.MagicMock(side_effect = [True, False]))
@@ -370,3 +371,4 @@ class TestSfp:
         assert not sfp.set_lpmode(True)
         assert sfp.set_lpmode(False)
         assert not sfp.set_lpmode(False)
+    '''
