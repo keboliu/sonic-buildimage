@@ -54,6 +54,15 @@ SX_PORT_MODULE_STATUS_UNPLUGGED = 2
 SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
 SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
 
+try:
+    if os.environ["PLATFORM_API_UNIT_TESTING"] == "1":
+        # Unable to import SDK constants under unit test
+        # Define them here
+        SX_PORT_ADMIN_STATUS_UP = True
+        SX_PORT_ADMIN_STATUS_DOWN = False
+except KeyError:
+    pass
+
 # identifier value of xSFP module which is in the first byte of the EEPROM
 # if the identifier value falls into SFP_TYPE_CODE_LIST the module is treated as a SFP module and parsed according to 8472
 # for QSFP_TYPE_CODE_LIST the module is treated as a QSFP module and parsed according to 8436/8636
