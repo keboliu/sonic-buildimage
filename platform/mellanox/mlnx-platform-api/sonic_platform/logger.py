@@ -23,7 +23,8 @@ from sonic_py_common.logger import Logger
 # allow user to set log level via swssloglevel command at real time. This instance 
 # should be shared by all modules of platform API to avoid starting too many logger thread.
 if os.environ.get("PLATFORM_API_UNIT_TESTING") != "1":
-    logger = Logger(enable_set_log_level_on_fly=True, db_name='nvidia-platform-api')
+    # platform API is a lib, let caller set the log identifier
+    logger = Logger(enable_set_log_level_on_fly=True)
 else:
     # for unit test, there is no redis, don't set enable_set_log_level_on_fly=True
     logger = Logger()
