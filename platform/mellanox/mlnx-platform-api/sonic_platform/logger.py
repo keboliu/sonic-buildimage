@@ -19,12 +19,11 @@ import os
 from sonic_py_common.logger import Logger
 
 # Global logger instance for nvidia platform API, the argument "enable_set_log_level_on_fly"
-# will start a thread to detect CONFIG DB LOGGER table change. The logger instance 
-# allow user to set log level via swssloglevel command at real time. This instance 
+# will start a thread to detect CONFIG DB LOGGER table change. The logger instance
+# allow user to set log level via swssloglevel command at real time. This instance
 # should be shared by all modules of platform API to avoid starting too many logger thread.
 if os.environ.get("PLATFORM_API_UNIT_TESTING") != "1":
-    # platform API is a lib, let caller set the log identifier
-    logger = Logger(enable_set_log_level_on_fly=True)
+    logger = Logger(log_identifier='nvidia-platform-api', enable_set_log_level_on_fly=True)
 else:
     # for unit test, there is no redis, don't set enable_set_log_level_on_fly=True
-    logger = Logger()
+    logger = Logger(log_identifier='nvidia-platform-api')
