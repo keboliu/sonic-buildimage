@@ -32,8 +32,6 @@ class Logger(object):
         if log_identifier is None:
             log_identifier = os.path.basename(sys.argv[0])
 
-        self.enable_set_log_level_on_fly = enable_set_log_level_on_fly
-
         # Initialize syslog
         self._syslog.openlog(ident=log_identifier, logoption=log_option, facility=log_facility)
 
