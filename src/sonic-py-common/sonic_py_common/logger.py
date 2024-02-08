@@ -31,10 +31,7 @@ class Logger(object):
 
         if log_identifier is None:
             log_identifier = os.path.basename(sys.argv[0])
-        if db_name is None:
-            self.db_name = log_identifier
-        else:
-            self.db_name = db_name
+
         self.enable_set_log_level_on_fly = enable_set_log_level_on_fly
 
         # Initialize syslog
