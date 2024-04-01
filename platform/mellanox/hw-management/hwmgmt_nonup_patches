@@ -4,12 +4,9 @@
 0045-leds-mlxreg-Remove-code-for-amber-LED-colour.patch
 0046-Extend-driver-to-support-Infineon-Digital-Multi-phas.patch
 0047-dt-bindings-trivial-devices-Add-infineon-xdpe1a2g7.patch
-0048-hwmon-pmbus-Add-support-for-MPS-Multi-phase-mp2891-c.patch
-0049-dt-bindings-trivial-devices-Add-mps-mp2891.patch
 0050-leds-mlxreg-Skip-setting-LED-color-during-initializa.patch
 0053-platform-mellanox-Add-support-for-dynamic-I2C-channe.patch
 0054-platform-mellanox-Introduce-support-for-switches-equ.patch
-0055-mellanox-Relocate-mlx-platform-driver.patch
 0066-UBUNTU-SAUCE-sdhci-of-dwcmshc-Enable-host-V4-support.patch
 0067-UBUNTU-SAUCE-mmc-sdhci-of-dwcmshc-add-the-missing-de.patch
 0068-UBUNTU-SAUCE-mmc-sdhci-of-dwcmshc-Add-runtime-PM-ope.patch
@@ -29,5 +26,9 @@
 0082-UBUNTU-SAUCE-mlxbf-ptm-add-atx-debugfs-nodes.patch
 0083-UBUNTU-SAUCE-mlxbf-ptm-update-module-version.patch
 0084-UBUNTU-SAUCE-mlxbf-bootctl-Fix-kernel-panic-due-to-b.patch
+0086-gpio-mlxbf3-Fix-error-message.patch
 8000-mlxsw-Use-weak-reverse-dependencies-for-firmware-fla.patch
+8001-platform-mellanox-Downstream-Add-dedicated-match-for.patch
+8002-platform-mlx-platform-Downstream-Add-SPI-path-for-ra.patch
 8004-mlxsw-minimal-Downstream-Ignore-error-reading-SPAD-r.patch
+9003-platform-mellanox-Introduce-support-of-Nvidia-L1-tra.patch
