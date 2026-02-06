@@ -514,6 +514,32 @@ def test_hardware_checker():
         }
     })
 
+    MockConnector.data.update({
+        'PWM_INFO|pwm': {
+            'name': 'pwm',
+            'value': '128',
+            'status': 'OK',
+            'min_threshold': '0',
+            'max_threshold': '255',
+            'minimum_value': '64',
+            'maximum_value': '192'
+        },
+        'PWM_INFO|pwm2': {
+            'name': 'pwm2',
+            'value': '300',
+            'status': 'NOT_OK',
+            'min_threshold': '0',
+            'max_threshold': '255',
+            'minimum_value': '128',
+            'maximum_value': '300'
+        },
+        'PWM_INFO|pwm3': {
+            'name': 'pwm3',
+            'value': '100'
+            # Missing status field
+        }
+    })
+
     checker = HardwareChecker()
     assert checker.get_category() == 'Hardware'
     config = Config()
@@ -582,6 +608,18 @@ def test_hardware_checker():
 
     assert 'liquid_cooling_6' in checker._info
     assert checker._info['liquid_cooling_6'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
+
+    # PWM checks
+    assert 'pwm' in checker._info
+    assert checker._info['pwm'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
+
+    assert 'pwm2' in checker._info
+    assert checker._info['pwm2'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert 'value is out of range' in checker._info['pwm2'][HealthChecker.INFO_FIELD_OBJECT_MSG]
+
+    assert 'pwm3' in checker._info
+    assert checker._info['pwm3'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert 'Failed to get status' in checker._info['pwm3'][HealthChecker.INFO_FIELD_OBJECT_MSG]
 
 
 def test_config():

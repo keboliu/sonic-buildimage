@@ -15,6 +15,7 @@ class HardwareChecker(HealthChecker):
     ASIC_TEMPERATURE_KEY = 'TEMPERATURE_INFO|ASIC'
     FAN_TABLE_NAME = 'FAN_INFO'
     PSU_TABLE_NAME = 'PSU_INFO'
+    PWM_TABLE_NAME = 'PWM_INFO'
     LIQUID_COOLING_TABLE_NAME = 'LIQUID_COOLING_INFO'
 
     def __init__(self):
@@ -32,6 +33,7 @@ class HardwareChecker(HealthChecker):
         self._check_asic_status(config)
         self._check_fan_status(config)
         self._check_psu_status(config)
+        self._check_pwm_status(config)
         self._check_liquid_cooling_status(config)
 
     def _check_asic_status(self, config):
@@ -276,6 +278,50 @@ class HardwareChecker(HealthChecker):
                     continue
 
             self.set_object_ok('PSU', name)
+
+    def _check_pwm_status(self, config):
+        """
+        Check PWM status including:
+            1. Check PWM value is within valid thresholds
+        :param config: Health checker configuration
+        :return:
+        """
+        if config.ignore_devices and 'pwm' in config.ignore_devices:
+            return
+
+        keys = self._db.keys(self._db.STATE_DB, HardwareChecker.PWM_TABLE_NAME + '*')
+        if not keys:
+            # PWM info may not be available on all platforms, so don't report error if no keys found
+            return
+
+        for key in natsorted(keys):
+            key_list = key.split('|')
+            if len(key_list) != 2:  # error data in DB, log it and ignore
+                self.set_object_not_ok('PWM', key, 'Invalid key for PWM_INFO: {}'.format(key))
+                continue
+
+            name = key_list[1]
+            if config.ignore_devices and name in config.ignore_devices:
+                continue
+
+            data_dict = self._db.get_all(self._db.STATE_DB, key)
+
+            # Check PWM status field
+            status = data_dict.get('status', None)
+            if status is None:
+                self.set_object_not_ok('PWM', name, 'Failed to get status for {}'.format(name))
+                continue
+
+            if status == 'NOT_OK':
+                value = data_dict.get('value', 'N/A')
+                min_threshold = data_dict.get('min_threshold', 'N/A')
+                max_threshold = data_dict.get('max_threshold', 'N/A')
+                self.set_object_not_ok('PWM', name,
+                                       '{} value is out of range, value={}, range=[{},{}]'.format(
+                                           name, value, min_threshold, max_threshold))
+                continue
+
+            self.set_object_ok('PWM', name)
 
     def reset(self):
         self._info = {}
